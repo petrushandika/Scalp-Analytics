@@ -481,6 +481,89 @@ flowchart TD
 | Stress Management | Teknik relaksasi, meditasi |
 | Jurnal/Artikel | Penelitian tentang rambut |
 
+#### Notification & Reminder System
+
+```mermaid
+flowchart TD
+    subgraph Triggers
+        A[Treatment Schedule]
+        B[Habit Reminder]
+        C[Photo Reminder]
+        D[Insight Alert]
+        E[Streak Warning]
+    end
+    
+    subgraph Notification Service
+        F[Queue Manager]
+        G[Template Engine]
+        H[Channel Router]
+    end
+    
+    subgraph Channels
+        I[In-App Push]
+        J[Email]
+        K[Push Browser]
+    end
+    
+    A --> F
+    B --> F
+    C --> F
+    D --> F
+    E --> F
+    
+    F --> G
+    G --> H
+    H --> I
+    H --> J
+    H --> K
+```
+
+| Tipe Notifikasi | Trigger | Channel | Frequency |
+|----------------|---------|---------|-----------|
+| Treatment Reminder | Jadwal treatment | In-App, Push | Real-time |
+| Habit Reminder | Belum log hari ini | In-App, Email | 10:00, 20:00 |
+| Photo Reminder | Jadwal foto mingguan | Email | Mingguan |
+| Streak Warning | Streak akan putus | Push | Real-time |
+| Insight Alert | Insight baru tersedia | In-App | On-demand |
+| Progress Update | Progress mingguan | Email | Mingguan |
+| Severity Alert | Severity berubah signifikan | Email | On-demand |
+
+**Email Notification Categories:**
+
+```mermaid
+flowchart LR
+    subgraph Transactional
+        A[Welcome Email]
+        B[Email Verification]
+        C[Password Reset]
+        D[Treatment Reminder]
+    end
+    
+    subgraph Marketing
+        E[Weekly Progress]
+        F[Tips & Education]
+        G[Product Recommendations]
+    end
+    
+    subgraph Alerts
+        H[Streak Warning]
+        I[Severity Change]
+        J[Goal Milestone]
+    end
+```
+
+**Notification Preferences:**
+
+| Setting | Default | Options |
+|---------|---------|---------|
+| Treatment Reminder | On | On, Off, Custom |
+| Habit Reminder | On | On, Off |
+| Photo Reminder | On | On, Off |
+| Email Marketing | On | On, Off |
+| Push Notification | On | On, Off |
+| Reminder Time | Flexible | Custom waktu |
+| Quiet Hours | Off | Set range jam |
+
 ---
 
 ### 3.2 Advanced Features

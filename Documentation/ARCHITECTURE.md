@@ -30,6 +30,7 @@ graph TB
         B2[Photo Router]
         B3[Habit Router]
         B4[Treatment Router]
+        B5[Notification Router]
     end
     
     subgraph "APPLICATION LAYER"
@@ -38,6 +39,7 @@ graph TB
         C2[PhotoService]
         C3[HabitService]
         C4[TreatmentService]
+        C5[NotificationService]
     end
     
     subgraph "DOMAIN LAYER"
@@ -46,6 +48,8 @@ graph TB
         D2[Photo]
         D3[HabitLog]
         D4[Treatment]
+        D5[Notification]
+        D6[NotificationPreferences]
     end
     
     subgraph "INFRASTRUCTURE LAYER"
@@ -123,7 +127,9 @@ backend/
 │   │   │   ├── user.py
 │   │   │   ├── photo.py
 │   │   │   ├── habit_log.py
-│   │   │   └── treatment.py
+│   │   │   ├── treatment.py
+│   │   │   ├── notification.py
+│   │   │   └── notification_preferences.py
 │   │   └── value_objects/
 │   │       ├── __init__.py
 │   │       ├── email.py
@@ -136,7 +142,9 @@ backend/
 │   │   │   ├── auth_service.py
 │   │   │   ├── photo_service.py
 │   │   │   ├── habit_service.py
-│   │   │   └── treatment_service.py
+│   │   │   ├── treatment_service.py
+│   │   │   ├── notification_service.py
+│   │   │   └── push_service.py
 │   │   ├── dto/
 │   │   │   ├── __init__.py
 │   │   │   └── requests.py
@@ -155,14 +163,16 @@ backend/
 │       │   ├── users.py
 │       │   ├── photos.py
 │       │   ├── habits.py
-│       │   └── treatments.py
+│       │   ├── treatments.py
+│       │   └── notifications.py
 │       ├── schemas/
 │       │   ├── __init__.py
 │       │   ├── auth_schema.py
 │       │   ├── user_schema.py
 │       │   ├── photo_schema.py
 │       │   ├── habit_schema.py
-│       │   └── treatment_schema.py
+│       │   ├── treatment_schema.py
+│       │   └── notification_schema.py
 │       └── middleware/
 │           ├── __init__.py
 │           ├── auth_middleware.py
@@ -714,6 +724,411 @@ class StorageQuotaService:
 
 ---
 
+## 4.6 Notification Service Architecture
+
+### 4.6.1 Service Overview
+
+```mermaid
+graph TB
+    subgraph "Notification Service"
+        NS[NotificationService]
+        NP[NotificationPreferencesService]
+        PS[PushService]
+        ES[EmailService]
+    end
+    
+    subgraph "Trigger Sources"
+        PS1[PhotoScheduler]
+        TS1[TreatmentScheduler]
+        AS[AnalyticsService]
+        HS[HabitService]
+    end
+    
+    subgraph "External Services"
+        FCM[Firebase Cloud Messaging]
+        APNs[Apple Push Notification]
+        SG[SendGrid SMTP]
+    end
+    
+    subgraph "User Devices"
+        D1[iOS Device]
+        D2[Android Device]
+        D3[Web Browser]
+    end
+    
+    PS1 --> NS
+    TS1 --> NS
+    AS --> NS
+    HS --> NS
+    
+    NS --> NP
+    NP --> NS
+    NS --> PS
+    NS --> ES
+    
+    PS --> FCM
+    PS --> APNs
+    ES --> SG
+    
+    FCM --> D2
+    FCM --> D3
+    APNs --> D1
+    SG --> D1
+    SG --> D2
+    SG --> D3
+```
+
+### 4.6.2 Notification Service Implementation
+
+```python
+# app/application/services/notification_service.py
+from uuid import UUID
+from typing import List, Optional
+from enum import Enum
+from datetime import datetime
+
+class NotificationType(str, Enum):
+    PHOTO_REMINDER = "photo_reminder"
+    TREATMENT_REMINDER = "treatment_reminder"
+    PROGRESS_MILESTONE = "progress_milestone"
+    HABIT_STREAK = "habit_streak"
+    RISK_ALERT = "risk_alert"
+    WEEKLY_REPORT = "weekly_report"
+    TIPS_RECOMMENDATION = "tips_recommendation"
+
+class NotificationChannel(str, Enum):
+    PUSH = "push"
+    EMAIL = "email"
+    IN_APP = "in_app"
+
+class NotificationStatus(str, Enum):
+    PENDING = "pending"
+    SENT = "sent"
+    DELIVERED = "delivered"
+    READ = "read"
+    DISMISSED = "dismissed"
+    FAILED = "failed"
+
+class NotificationService:
+    """
+    Service untuk mengelola notifikasi pengguna.
+    Mendukung push notification, email, dan in-app notification.
+    """
+    
+    def __init__(
+        self,
+        notification_repo: "NotificationRepository",
+        preference_service: "NotificationPreferenceService",
+        push_service: "PushService",
+        email_service: "EmailService"
+    ):
+        self._notification_repo = notification_repo
+        self._preference_service = preference_service
+        self._push_service = push_service
+        self._email_service = email_service
+    
+    async def send_notification(
+        self,
+        user_id: UUID,
+        notification_type: NotificationType,
+        title: str,
+        message: str,
+        data: Optional[dict] = None
+    ) -> List[dict]:
+        """
+        Mengirim notifikasi ke pengguna berdasarkan preferensi.
+        
+        Returns list of sent notifications with status per channel.
+        """
+        preferences = await self._preference_service.get_preferences(user_id)
+        channels = self._get_enabled_channels(preferences, notification_type)
+        
+        results = []
+        
+        for channel in channels:
+            notification = await self._create_notification(
+                user_id=user_id,
+                notification_type=notification_type,
+                channel=channel,
+                title=title,
+                message=message,
+                data=data
+            )
+            
+            try:
+                if channel == NotificationChannel.PUSH:
+                    await self._send_push(user_id, notification)
+                elif channel == NotificationChannel.EMAIL:
+                    await self._send_email(user_id, notification)
+                
+                notification.status = NotificationStatus.SENT
+                results.append({"channel": channel, "status": "sent"})
+                
+            except Exception as e:
+                notification.status = NotificationStatus.FAILED
+                results.append({"channel": channel, "status": "failed", "error": str(e)})
+            
+            await self._notification_repo.save(notification)
+        
+        return results
+    
+    def _get_enabled_channels(
+        self,
+        preferences: "NotificationPreferences",
+        notification_type: NotificationType
+    ) -> List[NotificationChannel]:
+        """Get enabled channels based on preferences and notification type."""
+        channels = []
+        
+        type_preference_map = {
+            NotificationType.PHOTO_REMINDER: preferences.photo_reminder,
+            NotificationType.TREATMENT_REMINDER: preferences.treatment_reminder,
+            NotificationType.PROGRESS_MILESTONE: preferences.progress_milestone,
+            NotificationType.HABIT_STREAK: preferences.habit_streak,
+            NotificationType.RISK_ALERT: preferences.risk_alert,
+            NotificationType.WEEKLY_REPORT: preferences.weekly_report,
+            NotificationType.TIPS_RECOMMENDATION: preferences.tips_recommendation
+        }
+        
+        if type_preference_map.get(notification_type, False):
+            if preferences.push_enabled:
+                channels.append(NotificationChannel.PUSH)
+            if preferences.email_enabled:
+                channels.append(NotificationChannel.EMAIL)
+            channels.append(NotificationChannel.IN_APP)
+        
+        return channels
+```
+
+### 4.6.3 Push Notification Service
+
+```python
+# app/infrastructure/services/push_service.py
+from firebase_admin import messaging
+from typing import List, Optional
+from uuid import UUID
+
+class PushService:
+    """
+    Service untuk mengirim push notification via FCM dan APNs.
+    """
+    
+    async def send_push(
+        self,
+        device_tokens: List[str],
+        title: str,
+        body: str,
+        data: Optional[dict] = None
+    ) -> dict:
+        """Send push notification to multiple devices."""
+        message = messaging.MulticastMessage(
+            notification=messaging.Notification(
+                title=title,
+                body=body
+            ),
+            data=data or {},
+            tokens=device_tokens
+        )
+        
+        response = messaging.send_multicast(message)
+        
+        return {
+            "success_count": response.success_count,
+            "failure_count": response.failure_count,
+            "responses": [
+                {"success": r.success, "error": str(r.exception)}
+                for r in response.responses
+            ]
+        }
+    
+    async def register_device(
+        self,
+        user_id: UUID,
+        token: str,
+        platform: str
+    ) -> "DeviceToken":
+        """Register device token for push notifications."""
+        pass
+    
+    async def unregister_device(
+        self,
+        user_id: UUID,
+        token: str
+    ) -> bool:
+        """Unregister device token."""
+        pass
+```
+
+### 4.6.4 Notification Preferences Entity
+
+```python
+# app/domain/entities/notification_preferences.py
+from dataclasses import dataclass
+from datetime import datetime
+from uuid import UUID, uuid4
+
+@dataclass
+class NotificationPreferences:
+    """
+    Entity untuk preferensi notifikasi pengguna.
+    """
+    id: UUID
+    user_id: UUID
+    photo_reminder: bool
+    treatment_reminder: bool
+    progress_milestone: bool
+    habit_streak: bool
+    risk_alert: bool
+    weekly_report: bool
+    tips_recommendation: bool
+    push_enabled: bool
+    email_enabled: bool
+    created_at: datetime
+    updated_at: datetime
+    
+    @classmethod
+    def create(cls, user_id: UUID) -> "NotificationPreferences":
+        """Create default notification preferences for new user."""
+        now = datetime.utcnow()
+        return cls(
+            id=uuid4(),
+            user_id=user_id,
+            photo_reminder=True,
+            treatment_reminder=True,
+            progress_milestone=True,
+            habit_streak=True,
+            risk_alert=True,
+            weekly_report=True,
+            tips_recommendation=True,
+            push_enabled=True,
+            email_enabled=True,
+            created_at=now,
+            updated_at=now
+        )
+    
+    def update(
+        self,
+        photo_reminder: bool = None,
+        treatment_reminder: bool = None,
+        progress_milestone: bool = None,
+        habit_streak: bool = None,
+        risk_alert: bool = None,
+        weekly_report: bool = None,
+        tips_recommendation: bool = None,
+        push_enabled: bool = None,
+        email_enabled: bool = None
+    ) -> None:
+        """Update notification preferences."""
+        if photo_reminder is not None:
+            self.photo_reminder = photo_reminder
+        if treatment_reminder is not None:
+            self.treatment_reminder = treatment_reminder
+        if progress_milestone is not None:
+            self.progress_milestone = progress_milestone
+        if habit_streak is not None:
+            self.habit_streak = habit_streak
+        if risk_alert is not None:
+            self.risk_alert = risk_alert
+        if weekly_report is not None:
+            self.weekly_report = weekly_report
+        if tips_recommendation is not None:
+            self.tips_recommendation = tips_recommendation
+        if push_enabled is not None:
+            self.push_enabled = push_enabled
+        if email_enabled is not None:
+            self.email_enabled = email_enabled
+        
+        self.updated_at = datetime.utcnow()
+```
+
+### 4.6.5 Notification Flow
+
+```mermaid
+sequenceDiagram
+    participant T as Trigger Source
+    participant NS as NotificationService
+    participant NP as PreferenceService
+    participant PS as PushService
+    participant ES as EmailService
+    participant DB as Database
+    participant FCM as Firebase/ApNs
+    participant U as User Device
+    
+    T->>NS: Trigger Event
+    NS->>NP: Get User Preferences
+    NP->>DB: Query Preferences
+    DB-->>NP: Preferences Data
+    NP-->>NS: Enabled Channels
+    
+    alt Push Enabled
+        NS->>DB: Get Device Tokens
+        DB-->>NS: Token List
+        NS->>PS: Send Push
+        PS->>FCM: Push Message
+        FCM-->>PS: Delivery Status
+        FCM->>U: Push Notification
+    end
+    
+    alt Email Enabled
+        NS->>ES: Send Email
+        ES->>U: Email Notification
+    end
+    
+    NS->>DB: Save Notification Record
+    NS-->>T: Notification Sent
+```
+
+### 4.6.6 Database Tables
+
+```mermaid
+erDiagram
+    USER ||--|| NOTIFICATION_PREFERENCES : has
+    USER ||--o{ NOTIFICATION : receives
+    USER ||--o{ DEVICE_TOKEN : owns
+    
+    NOTIFICATION_PREFERENCES {
+        uuid id PK
+        uuid user_id FK UK
+        boolean photo_reminder
+        boolean treatment_reminder
+        boolean progress_milestone
+        boolean habit_streak
+        boolean risk_alert
+        boolean weekly_report
+        boolean tips_recommendation
+        boolean push_enabled
+        boolean email_enabled
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    NOTIFICATION {
+        uuid id PK
+        uuid user_id FK
+        string type
+        string channel
+        string title
+        text message
+        jsonb data
+        string status
+        timestamp created_at
+        timestamp read_at
+        timestamp dismissed_at
+    }
+    
+    DEVICE_TOKEN {
+        uuid id PK
+        uuid user_id FK
+        string token UK
+        string platform
+        string device_name
+        timestamp last_used_at
+        timestamp created_at
+    }
+```
+
+---
+
 ## 5. Security Architecture
 
 ### 5.1 Authentication Flow
@@ -835,6 +1250,9 @@ graph TB
 | Photo Analysis | No Cache | N/A |
 | Dashboard Stats | Redis Cache | 5 minutes |
 | Treatment List | Redis Cache | 10 minutes |
+| Notification Preferences | Redis Cache | 1 hour |
+| Device Tokens | Redis Cache | 30 minutes |
+| Unread Notification Count | Redis Cache | 1 minute |
 
 ---
 

@@ -18,6 +18,9 @@ erDiagram
     USERS ||--o{ TREATMENTS : owns
     USERS ||--o{ MEAL_LOGS : records
     USERS ||--o{ WATER_INTAKES : tracks
+    USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o{ NOTIFICATION_PREFERENCES : has
+    USERS ||--o{ DEVICE_TOKENS : registers
     TREATMENTS ||--o{ TREATMENT_SCHEDULES : has
     TREATMENT_SCHEDULES ||--o{ TREATMENT_LOGS : generates
     MEAL_LOGS ||--o{ MEAL_ITEMS : contains
@@ -165,6 +168,57 @@ erDiagram
         varchar token_hash UK
         timestamp expires_at
         boolean revoked
+        timestamp created_at
+    }
+    
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        varchar type
+        varchar channel
+        varchar status
+        varchar title
+        text message
+        jsonb data
+        timestamp scheduled_at
+        timestamp sent_at
+        timestamp read_at
+        timestamp created_at
+    }
+    
+    NOTIFICATION_PREFERENCES {
+        uuid id PK
+        uuid user_id FK
+        boolean treatment_reminder
+        boolean habit_reminder
+        boolean photo_reminder
+        boolean streak_warning
+        boolean email_marketing
+        boolean push_notification
+        time quiet_hours_start
+        time quiet_hours_end
+        timestamp created_at
+    }
+    
+    DEVICE_TOKENS {
+        uuid id PK
+        uuid user_id FK
+        varchar token
+        varchar platform
+        varchar device_name
+        boolean is_active
+        timestamp last_used_at
+        timestamp created_at
+    }
+    
+    EMAIL_TEMPLATES {
+        uuid id PK
+        varchar name UK
+        varchar subject
+        text html_content
+        text text_content
+        jsonb variables
+        boolean is_active
         timestamp created_at
     }
 ```
@@ -669,6 +723,152 @@ CREATE INDEX idx_water_intakes_date ON water_intakes(log_date);
 
 COMMENT ON TABLE water_intakes IS 'Log asupan air harian';
 COMMENT ON COLUMN water_intakes.amount_ml IS 'Jumlah air dalam mililiter';
+```
+
+### 2.14 Tabel Notification Preferences
+
+Menyimpan preferensi notifikasi pengguna.
+
+```sql
+CREATE TABLE notification_preferences (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    treatment_reminder BOOLEAN DEFAULT true,
+    habit_reminder BOOLEAN DEFAULT true,
+    photo_reminder BOOLEAN DEFAULT true,
+    streak_warning BOOLEAN DEFAULT true,
+    insight_alert BOOLEAN DEFAULT true,
+    progress_update BOOLEAN DEFAULT true,
+    email_marketing BOOLEAN DEFAULT true,
+    push_notification BOOLEAN DEFAULT true,
+    quiet_hours_start TIME,
+    quiet_hours_end TIME,
+    reminder_time_morning TIME DEFAULT '09:00:00',
+    reminder_time_evening TIME DEFAULT '20:00:00',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT unique_user_notification_prefs UNIQUE (user_id)
+);
+
+CREATE INDEX idx_notification_prefs_user_id ON notification_preferences(user_id);
+
+COMMENT ON TABLE notification_preferences IS 'Preferensi notifikasi pengguna';
+COMMENT ON COLUMN notification_preferences.quiet_hours_start IS 'Jam mulai quiet hours (no notifications)';
+COMMENT ON COLUMN notification_preferences.quiet_hours_end IS 'Jam selesai quiet hours';
+```
+
+### 2.15 Tabel Notifications
+
+Menyimpan record notifikasi yang dikirim.
+
+```sql
+CREATE TYPE notification_channel AS ENUM ('in_app', 'email', 'push', 'sms');
+CREATE TYPE notification_status AS ENUM ('pending', 'sent', 'failed', 'read', 'dismissed');
+CREATE TYPE notification_type AS ENUM (
+    'treatment_reminder', 'habit_reminder', 'photo_reminder',
+    'streak_warning', 'insight_alert', 'progress_update',
+    'severity_change', 'goal_milestone', 'welcome', 'verification'
+);
+
+CREATE TABLE notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type notification_type NOT NULL,
+    channel notification_channel NOT NULL,
+    status notification_status DEFAULT 'pending',
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    data JSONB,
+    scheduled_at TIMESTAMP WITH TIME ZONE,
+    sent_at TIMESTAMP WITH TIME ZONE,
+    read_at TIMESTAMP WITH TIME ZONE,
+    dismissed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT valid_status_transition CHECK (
+        (status = 'pending' AND sent_at IS NULL) OR
+        (status = 'sent' AND sent_at IS NOT NULL) OR
+        (status = 'failed') OR
+        (status = 'read' AND read_at IS NOT NULL) OR
+        (status = 'dismissed' AND dismissed_at IS NOT NULL)
+    )
+);
+
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_status ON notifications(status);
+CREATE INDEX idx_notifications_type ON notifications(type);
+CREATE INDEX idx_notifications_scheduled ON notifications(scheduled_at);
+CREATE INDEX idx_notifications_user_status ON notifications(user_id, status);
+
+COMMENT ON TABLE notifications IS 'Record notifikasi yang dikirim ke pengguna';
+COMMENT ON COLUMN notifications.data IS 'Data tambahan dalam format JSON (treatment_id, streak_count, dll)';
+COMMENT ON COLUMN notifications.scheduled_at IS 'Waktu jadwal pengiriman';
+```
+
+### 2.16 Tabel Device Tokens
+
+Menyimpan token perangkat untuk push notification.
+
+```sql
+CREATE TYPE device_platform AS ENUM ('ios', 'android', 'web');
+
+CREATE TABLE device_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(500) NOT NULL,
+    platform device_platform NOT NULL,
+    device_name VARCHAR(100),
+    device_model VARCHAR(100),
+    is_active BOOLEAN DEFAULT true,
+    last_used_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT unique_user_token UNIQUE (user_id, token)
+);
+
+CREATE INDEX idx_device_tokens_user_id ON device_tokens(user_id);
+CREATE INDEX idx_device_tokens_token ON device_tokens(token);
+CREATE INDEX idx_device_tokens_active ON device_tokens(is_active);
+
+COMMENT ON TABLE device_tokens IS 'Token perangkat untuk push notification';
+COMMENT ON COLUMN device_tokens.token IS 'FCM token atau APNs token';
+COMMENT ON COLUMN device_tokens.platform IS 'Platform perangkat: ios, android, web';
+```
+
+### 2.17 Tabel Email Templates
+
+Menyimpan template email untuk notifikasi.
+
+```sql
+CREATE TABLE email_templates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) UNIQUE NOT NULL,
+    subject VARCHAR(200) NOT NULL,
+    html_content TEXT NOT NULL,
+    text_content TEXT,
+    variables JSONB,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_email_templates_name ON email_templates(name);
+CREATE INDEX idx_email_templates_active ON email_templates(is_active);
+
+COMMENT ON TABLE email_templates IS 'Template email untuk berbagai jenis notifikasi';
+COMMENT ON COLUMN email_templates.variables IS 'Daftar variabel yang dapat digunakan dalam template';
+
+-- Insert default templates
+INSERT INTO email_templates (name, subject, html_content, text_content, variables) VALUES
+('welcome', 'Selamat Datang di Scalp Analytics!', '<h1>Selamat Datang!</h1>', 'Selamat Datang!', '["name"]'),
+('treatment_reminder', 'Pengingat Treatment: {{treatment_name}}', '<p>Jangan lupa treatment Anda!</p>', 'Jangan lupa treatment!', '["treatment_name", "time"]'),
+('habit_reminder', 'Waktunya Log Habit Harian', '<p>Sudahkah Anda log habit hari ini?</p>', 'Sudahkah log habit?', '[]'),
+('photo_reminder', 'Waktunya Upload Foto Mingguan', '<p>Sudahkah upload foto minggu ini?</p>', 'Upload foto mingguan!', '[]'),
+('streak_warning', 'Streak Anda Terancam Putus!', '<p>Jangan biarkan streak putus!</p>', 'Streak terancam!', '["streak_count"]'),
+('progress_update', 'Progress Mingguan Anda', '<p>Berikut progress Anda minggu ini!</p>', 'Progress mingguan', '["growth_percent", "streak"]'),
+('severity_change', 'Perubahan Severity Terdeteksi', '<p>Terdapat perubahan pada kondisi rambut Anda.</p>', 'Severity change detected', '["old_stage", "new_stage"]');
 ```
 
 ---

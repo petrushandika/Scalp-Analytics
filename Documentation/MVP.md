@@ -375,6 +375,120 @@ flowchart TD
 
 ---
 
+### 2.8 Notification System
+
+#### Alur Notifikasi
+
+```mermaid
+flowchart TD
+    A[Trigger Event] --> B[Notification Service]
+    B --> C{Check Preferences}
+    C --> D[Build Notification]
+    D --> E{Channel Enabled?}
+    
+    E -->|Push| F[FCM/APNs]
+    E -->|Email| G[Email Service]
+    E -->|In-App| H[Database]
+    
+    F --> I[Device Push]
+    G --> J[User Email]
+    H --> K[Notification Bell]
+    
+    I --> L[User Notification]
+    J --> L
+    K --> L
+    
+    L --> M{User Action}
+    M -->|Read| N[Mark as Read]
+    M -->|Dismiss| O[Remove Notification]
+    M -->|Click| P[Navigate to Target]
+```
+
+#### Tipe Notifikasi
+
+| Tipe | Trigger | Contoh Pesan |
+|------|---------|--------------|
+| Photo Reminder | Scheduled time | "Waktunya foto mingguan untuk tracking progress" |
+| Treatment Reminder | Schedule time | "Jangan lupa aplikasikan Minoxidil pagi ini" |
+| Progress Milestone | AI detection | "Selamat! Densitas rambut naik 2% bulan ini" |
+| Habit Streak | Consecutive days | "Keren! 7 hari konsisten log habit" |
+| Risk Alert | Risk score change | "Tingkat stres tinggi terdeteksi, pantau kondisi" |
+| Weekly Report | Scheduled | "Laporan mingguan: 5 foto diupload, 90% compliance" |
+| Tips Recommendation | AI suggestion | "Tips hari ini: Tidur 8 jam untuk rambut sehat" |
+
+#### Channel Notifikasi
+
+| Channel | Implementasi | Use Case |
+|---------|--------------|----------|
+| Push Notification | Firebase Cloud Messaging (FCM), APNs | Reminder, Alert |
+| Email | SMTP atau SendGrid | Weekly report, Milestone |
+| In-App | Real-time WebSocket or Polling | Activity feed |
+
+#### Preferensi Notifikasi
+
+| Setting | Default | Deskripsi |
+|---------|---------|-----------|
+| photo_reminder | true | Pengingat foto mingguan |
+| treatment_reminder | true | Pengingat treatment harian |
+| progress_milestone | true | Notifikasi pencapaian |
+| habit_streak | true | Notifikasi streak habit |
+| risk_alert | true | Alert perubahan risiko |
+| weekly_report | true | Laporan mingguan via email |
+| tips_recommendation | true | Tips harian |
+| push_enabled | true | Enable push notification |
+| email_enabled | true | Enable email notification |
+
+#### Notification Preferences Entity
+
+```mermaid
+erDiagram
+    USER ||--|| NOTIFICATION_PREFERENCES : has
+    
+    NOTIFICATION_PREFERENCES {
+        uuid id PK
+        uuid user_id FK UK
+        boolean photo_reminder
+        boolean treatment_reminder
+        boolean progress_milestone
+        boolean habit_streak
+        boolean risk_alert
+        boolean weekly_report
+        boolean tips_recommendation
+        boolean push_enabled
+        boolean email_enabled
+        timestamp created_at
+        timestamp updated_at
+    }
+```
+
+#### Notification Status Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pending: Trigger Created
+    Pending --> Sent: Send Success
+    Pending --> Failed: Send Failed
+    Failed --> Pending: Retry
+    Sent --> Delivered: Delivery Confirmed
+    Delivered --> Read: User Opened
+    Delivered --> Dismissed: User Dismissed
+    Read --> [*]
+    Dismissed --> [*]
+```
+
+#### Spesifikasi Timeline Notifikasi
+
+| Event | Timing | Template ID |
+|-------|--------|-------------|
+| Photo Reminder | Weekly, user-selected day & time | photo_reminder_weekly |
+| Treatment Reminder | Daily, per treatment schedule | treatment_reminder_daily |
+| Progress Milestone | On detection | progress_milestone |
+| Habit Streak | On streak achievement | habit_streak_7days |
+| Risk Alert | On risk score change | risk_alert_high |
+| Weekly Report | Sunday 10:00 AM | weekly_report |
+
+---
+
 ## 3. Fitur Tambahan
 
 ### 3.1 Genetic & Lifestyle Risk Scoring
@@ -434,23 +548,26 @@ graph TB
         F[Treatment Service]
         G[Recommendation Service]
         H[Content Service]
+        I[Notification Service]
     end
     
     subgraph AI
-        I[Density Model]
-        J[Scalp Type Model]
-        K[Risk Scoring]
+        J[Density Model]
+        K[Scalp Type Model]
+        L[Risk Scoring]
     end
     
     subgraph Data
-        L[(PostgreSQL)]
-        M[Redis]
-        N[Storage]
+        M[(PostgreSQL)]
+        N[Redis]
+        O[Storage]
     end
     
     subgraph External
-        O[YouTube API]
-        P[Marketplace API]
+        P[YouTube API]
+        Q[Marketplace API]
+        R[FCM/APNs]
+        S[Email Service]
     end
     
     A --> B
@@ -460,15 +577,19 @@ graph TB
     B --> F
     B --> G
     B --> H
-    D --> I
+    B --> I
     D --> J
-    E --> K
-    C --> L
-    D --> L
+    D --> K
     E --> L
-    F --> L
-    G --> P
-    H --> O
+    C --> M
+    D --> M
+    E --> M
+    F --> M
+    I --> M
+    G --> Q
+    H --> P
+    I --> R
+    I --> S
 ```
 
 ### 4.2 Alur Data

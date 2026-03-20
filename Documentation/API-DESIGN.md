@@ -2120,6 +2120,394 @@ Authorization: Bearer <access_token>
 
 ---
 
+## 9. Endpoints Notifications
+
+### 9.1 Get Notification Preferences
+
+**GET** `/api/notifications/preferences`
+
+Mendapatkan preferensi notifikasi pengguna.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "user_id": "550e8400-e29b-41d4-a716-446655440000",
+    "treatment_reminder": true,
+    "habit_reminder": true,
+    "photo_reminder": true,
+    "streak_warning": true,
+    "insight_alert": true,
+    "progress_update": true,
+    "email_marketing": true,
+    "push_notification": true,
+    "quiet_hours_start": "22:00:00",
+    "quiet_hours_end": "07:00:00",
+    "reminder_time_morning": "09:00:00",
+    "reminder_time_evening": "20:00:00",
+    "created_at": "2026-03-20T10:00:00Z",
+    "updated_at": "2026-03-20T10:00:00Z"
+  }
+}
+```
+
+---
+
+### 9.2 Update Notification Preferences
+
+**PATCH** `/api/notifications/preferences`
+
+Mengupdate preferensi notifikasi pengguna.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Request Body
+
+```json
+{
+  "treatment_reminder": true,
+  "habit_reminder": true,
+  "photo_reminder": false,
+  "streak_warning": true,
+  "email_marketing": false,
+  "push_notification": true,
+  "quiet_hours_start": "23:00:00",
+  "quiet_hours_end": "06:00:00",
+  "reminder_time_morning": "08:00:00",
+  "reminder_time_evening": "21:00:00"
+}
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "user_id": "550e8400-e29b-41d4-a716-446655440000",
+    "treatment_reminder": true,
+    "habit_reminder": true,
+    "photo_reminder": false,
+    "streak_warning": true,
+    "email_marketing": false,
+    "push_notification": true,
+    "quiet_hours_start": "23:00:00",
+    "quiet_hours_end": "06:00:00",
+    "reminder_time_morning": "08:00:00",
+    "reminder_time_evening": "21:00:00",
+    "updated_at": "2026-03-20T11:00:00Z"
+  }
+}
+```
+
+---
+
+### 9.3 List Notifications
+
+**GET** `/api/notifications`
+
+Mendapatkan daftar notifikasi pengguna.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Query Parameters
+
+| Parameter | Tipe | Default | Deskripsi |
+|-----------|------|---------|-----------|
+| status | string | - | Filter: pending, sent, read, dismissed |
+| type | string | - | Filter by notification type |
+| page | int | 1 | Nomor halaman |
+| limit | int | 20 | Item per halaman |
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440010",
+        "type": "treatment_reminder",
+        "channel": "push",
+        "status": "read",
+        "title": "Waktunya Treatment",
+        "message": "Jangan lupa Minoxidil 5% - Pagi",
+        "data": {
+          "treatment_id": "550e8400-e29b-41d4-a716-446655440001",
+          "treatment_name": "Minoxidil 5%",
+          "scheduled_time": "08:00:00"
+        },
+        "sent_at": "2026-03-20T08:00:00Z",
+        "read_at": "2026-03-20T08:05:00Z",
+        "created_at": "2026-03-20T07:59:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 45,
+      "total_pages": 3
+    }
+  }
+}
+```
+
+---
+
+### 9.4 Mark Notification as Read
+
+**POST** `/api/notifications/{notification_id}/read`
+
+Menandai notifikasi sebagai telah dibaca.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Path Parameters
+
+| Parameter | Tipe | Deskripsi |
+|-----------|------|-----------|
+| notification_id | UUID | Identifier notifikasi |
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440010",
+    "status": "read",
+    "read_at": "2026-03-20T08:30:00Z"
+  }
+}
+```
+
+---
+
+### 9.5 Mark All Notifications as Read
+
+**POST** `/api/notifications/read-all`
+
+Menandai semua notifikasi sebagai telah dibaca.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "marked_count": 15,
+    "message": "Semua notifikasi telah ditandai sebagai dibaca"
+  }
+}
+```
+
+---
+
+### 9.6 Dismiss Notification
+
+**POST** `/api/notifications/{notification_id}/dismiss`
+
+Menutup notifikasi tanpa menandai sebagai dibaca.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Path Parameters
+
+| Parameter | Tipe | Deskripsi |
+|-----------|------|-----------|
+| notification_id | UUID | Identifier notifikasi |
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440010",
+    "status": "dismissed",
+    "dismissed_at": "2026-03-20T08:30:00Z"
+  }
+}
+```
+
+---
+
+### 9.7 Register Device Token
+
+**POST** `/api/notifications/device-token`
+
+Mendaftarkan token perangkat untuk push notification.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Request Body
+
+```json
+{
+  "token": "fcm_token_example_123456",
+  "platform": "android",
+  "device_name": "Samsung Galaxy S21",
+  "device_model": "SM-G991B"
+}
+```
+
+#### Request Schema
+
+| Field | Tipe | Required | Deskripsi |
+|-------|------|----------|-----------|
+| token | string | Ya | FCM token atau APNs token |
+| platform | string | Ya | Platform: ios, android, web |
+| device_name | string | Tidak | Nama perangkat |
+| device_model | string | Tidak | Model perangkat |
+
+#### Response Sukses (201)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440020",
+    "user_id": "550e8400-e29b-41d4-a716-446655440000",
+    "token": "fcm_token_example_123456",
+    "platform": "android",
+    "device_name": "Samsung Galaxy S21",
+    "device_model": "SM-G991B",
+    "is_active": true,
+    "created_at": "2026-03-20T10:00:00Z"
+  }
+}
+```
+
+---
+
+### 9.8 Unregister Device Token
+
+**DELETE** `/api/notifications/device-token/{token_id}`
+
+Menghapus token perangkat dari push notification.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Path Parameters
+
+| Parameter | Tipe | Deskripsi |
+|-----------|------|-----------|
+| token_id | UUID | Identifier device token |
+
+#### Response Sukses (204)
+
+No content returned.
+
+---
+
+### 9.9 Get Unread Count
+
+**GET** `/api/notifications/unread-count`
+
+Mendapatkan jumlah notifikasi yang belum dibaca.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "unread_count": 5,
+    "by_type": {
+      "treatment_reminder": 2,
+      "habit_reminder": 1,
+      "streak_warning": 1,
+      "insight_alert": 1
+    }
+  }
+}
+```
+
+---
+
+### 9.10 Send Test Notification
+
+**POST** `/api/notifications/test`
+
+Mengirim notifikasi test untuk verifikasi setup.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Request Body
+
+```json
+{
+  "channel": "push",
+  "title": "Test Notification",
+  "message": "This is a test notification"
+}
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "notification_id": "550e8400-e29b-41d4-a716-446655440021",
+    "channel": "push",
+    "status": "sent",
+    "sent_at": "2026-03-20T10:30:00Z"
+  }
+}
+```
+
+---
+
 ## 10. Rate Limiting
 
 ### 10.1 Batas Rate
