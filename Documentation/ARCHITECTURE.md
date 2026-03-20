@@ -5,7 +5,6 @@
 | Field | Nilai |
 |-------|-------|
 | **Proyek** | Scalp Analytics |
-| **Versi** | 1.0.0 |
 | **Pattern** | Clean Architecture |
 
 ---

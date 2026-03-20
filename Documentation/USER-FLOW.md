@@ -115,6 +115,306 @@ flowchart TD
 
 ---
 
+## 2.5 Flow Forgot Password
+
+### 2.5.1 Flow Diagram
+
+```mermaid
+flowchart TD
+    A[Login Page] --> B[Klik Lupa Password]
+    B --> C[Form Forgot Password]
+    C --> D[Input Email]
+    D --> E[Klik Kirim Link]
+    E --> F{Validasi Email}
+    F -->|Invalid| G[Tampilkan Error]
+    G --> C
+    F -->|Valid| H[Kirim Email Reset]
+    H --> I[Tampilkan Sukses]
+    I --> J[Cek Inbox]
+    J --> K[Klik Link Reset]
+    K --> L[Form Reset Password]
+    L --> M[Input Password Baru]
+    M --> N[Input Konfirmasi Password]
+    N --> O[Klik Reset Password]
+    O --> P{Validasi Password}
+    P -->|Tidak Cocok| Q[Tampilkan Error]
+    Q --> L
+    P -->|Cocok| R[Update Password]
+    R --> S[Kirim Email Konfirmasi]
+    S --> T[Redirect ke Login]
+    T --> U[Login dengan Password Baru]
+```
+
+### 2.5.2 Wireframe Forgot Password
+
+| Section | Component | Type | Placeholder |
+|---------|-----------|------|-------------|
+| Header | Logo + Title | Image + Text | Scalp Analytics |
+| Form | Email | Input | user@example.com |
+| Action | Submit | Button Primary | KIRIM LINK RESET |
+| Footer | Link | Text Link | Kembali ke Login |
+
+**Layout:**
+```
+┌─────────────────────────┐
+│   LUPA PASSWORD         │
+├─────────────────────────┤
+│ Masukkan email Anda     │
+│ untuk reset password    │
+│                         │
+│ Email                   │
+│ [___________________]   │
+│                         │
+│ [  KIRIM LINK RESET  ]  │
+│                         │
+│ Kembali ke Login        │
+└─────────────────────────┘
+```
+
+### 2.5.3 Wireframe Reset Password
+
+| Section | Component | Type | Placeholder |
+|---------|-----------|------|-------------|
+| Header | Logo + Title | Image + Text | Scalp Analytics |
+| Form | Password Baru | Password | ••••••••••• |
+| Form | Konfirmasi Password | Password | ••••••••••• |
+| Action | Submit | Button Primary | RESET PASSWORD |
+| Footer | Link | Text Link | Kembali ke Login |
+
+**Layout:**
+```
+┌─────────────────────────┐
+│   RESET PASSWORD        │
+├─────────────────────────┤
+│ Password Baru           │
+│ [___________________]   │
+│                         │
+│ Konfirmasi Password     │
+│ [___________________]   │
+│                         │
+│ [   RESET PASSWORD  ]   │
+│                         │
+│ Kembali ke Login        │
+└─────────────────────────┘
+```
+
+---
+
+## 2.6 Flow Email Verification
+
+### 2.6.1 Flow Diagram
+
+```mermaid
+flowchart TD
+    A[Registrasi Success] --> B[Kirim Email Verifikasi]
+    B --> C[Tampilkan Pesan]
+    C --> D[Cek Inbox]
+    D --> E{Link Valid?}
+    E -->|Ya| F[Klik Link Verifikasi]
+    E -->|Expired| G[Klik Kirim Ulang]
+    G --> B
+    F --> H[Verifikasi Email]
+    H --> I{Verifikasi OK?}
+    I -->|Ya| J[Tampilkan Sukses]
+    I -->|Tidak| K[Tampilkan Error]
+    K --> L[Klik Kirim Ulang]
+    L --> B
+    J --> M[Setup Profil]
+    M --> N[Dashboard]
+    
+    subgraph Resend Flow
+        G --> B
+        L --> B
+    end
+```
+
+### 2.6.2 Wireframe Verification Pending
+
+| Section | Component | Type | Placeholder |
+|---------|-----------|------|-------------|
+| Header | Logo + Title | Image + Text | Scalp Analytics |
+| Icon | Email Icon | Icon | Envelope |
+| Message | Verify Message | Text | Cek email Anda |
+| Action | Resend | Button Secondary | KIRIM ULANG EMAIL |
+| Footer | Support Link | Text Link | Butuh bantuan? |
+
+**Layout:**
+```
+┌─────────────────────────┐
+│   VERIFY YOUR EMAIL     │
+├─────────────────────────┤
+│         ✉️              │
+│                         │
+│ Kami telah mengirim     │
+│ email verifikasi ke:   │
+│                         │
+│ user@example.com       │
+│                         │
+│ Silakan klik link      │
+│ dalam email untuk       │
+│ mengaktifkan akun.     │
+│                         │
+│ [KIRIM ULANG EMAIL]    │
+│                         │
+│ Link kedaluwarsa       │
+│ dalam 24 jam           │
+│                         │
+│ Butuh bantuan?         │
+└─────────────────────────┘
+```
+
+### 2.6.3 Wireframe Verification Success
+
+**Layout:**
+```
+┌─────────────────────────┐
+│   VERIFICATION SUCCESS │
+├─────────────────────────┤
+│         ✓              │
+│                         │
+│ Email Anda telah       │
+│ diverifikasi!          │
+│                         │
+│ Mari lanjutkan setup   │
+│ profil Anda.            │
+│                         │
+│ [    LANJUTKAN    ]     │
+└─────────────────────────┘
+```
+
+---
+
+## 2.7 Flow Landing Page (Company Profile)
+
+### 2.7.1 Flow Diagram
+
+```mermaid
+flowchart TD
+    A[Home Page] --> B{Sudah Login?}
+    B -->|Ya| C[Dashboard]
+    B -->|Tidak| D[Landing Page]
+    D --> E[Hero Section]
+    E --> F{Scroll/Cta}
+    F -->|Scroll| G[Features Section]
+    F -->|Cta| H[Get Started]
+    G --> I[How It Works]
+    I --> J[Pricing/Plans]
+    J --> K[Testimonials]
+    K --> L[FAQ]
+    L --> M[Footer]
+    H --> N{Sudah Punya Akun?}
+    N -->|Ya| O[Login]
+    N -->|Tidak| P[Register]
+```
+
+### 2.7.2 Wireframe Landing Page
+
+| Section | Component | Type |
+|---------|-----------|------|
+| Navbar | Logo + Links + CTA | Navigation |
+| Hero | Title + Subtitle + CTA | Hero Section |
+| Features | Features Grid | Feature Cards |
+| How It Works | Steps | Step Cards |
+| Pricing | Pricing Cards | Pricing Table |
+| Testimonials | Reviews | Carousel |
+| FAQ | Accordion | FAQ List |
+| Footer | Links + Contact | Footer |
+
+**Layout Hero:**
+```
+┌─────────────────────────────────────────────────────────┐
+│  [Logo]   Features  Pricing  About  [Login] [Get Started]│
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│                    TRACK YOUR                          │
+│                    HAIR HEALTH                         │
+│                                                         │
+│         AI-powered hair health management system       │
+│         Monitor progress, track habits, get insights   │
+│                                                         │
+│                [Get Started Free]                      │
+│         [Watch Demo]                                   │
+│                                                         │
+│                    [Hero Image/Video]                  │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Layout Features:**
+```
+┌─────────────────────────────────────────────────────────┐
+│                    WHY SCALP ANALYTICS                  │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐   │
+│  │ AI      │  │ Habit   │  │ Product │  │ Dashboard│   │
+│  │ Analysis│  │ Tracker │  │ Recs    │  │ Analytics│   │
+│  │         │  │         │  │         │  │         │   │
+│  │ Track   │  │ Monitor │  │ Get     │  │ View    │   │
+│  │ hair    │  │ daily   │  │ product │  │ insights│   │
+│  │ density │  │ habits  │  │ tips    │  │ and data│   │
+│  └─────────┘  └─────────┘  └─────────┘  └─────────┘   │
+│                                                         │
+│             [Learn More About Features]                 │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Layout How It Works:**
+```
+┌─────────────────────────────────────────────────────────┐
+│                    HOW IT WORKS                         │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│      1                   2                   3           │
+│  ┌─────────┐      ┌─────────┐       ┌─────────┐      │
+│  │ Upload  │      │ Track   │       │ Get     │      │
+│  │ Photos  │ ───> │ Habits  │ ───>  │ Insights│      │
+│  │         │      │         │       │         │      │
+│  └─────────┘      └─────────┘       └─────────┘      │
+│                                                         │
+│   Weekly photos    Daily logging    AI analysis       │
+│   from 5 angles    habits & food    & recommendations  │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Layout Pricing:**
+```
+┌─────────────────────────────────────────────────────────┐
+│                      PRICING                            │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│     ┌───────────┐  ┌───────────┐  ┌───────────┐      │
+│     │  FREE     │  │  PRO      │  │  PREMIUM  │      │
+│     │           │  │  ★        │  │           │      │
+│     │  IDR 0    │  │  IDR 99K  │  │  IDR 199K │      │
+│     │  /month   │  │  /month   │  │  /month   │      │
+│     │           │  │           │  │           │      │
+│     │ • 5 photos│  │ • 25 photos│  │ • Unlimited│   │
+│     │ • Basic AI│  │ • Advanced AI│  │ • Priority AI│ │
+│     │ • Habit log│  │ • Nutrition │  │ • Nutrition   │ │
+│     │           │  │ • Dashboard│  │ • Dashboard     │ │
+│     │ [Start]   │  │ [Subscribe] │  │ [Subscribe]    │ │
+│     └───────────┘  └───────────┘  └───────────┘      │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 2.7.3 Public Pages
+
+| Page | Route | Deskripsi |
+|------|-------|-----------|
+| Home | `/` | Landing page dengan hero, features, pricing |
+| Features | `/features` | Detail fitur aplikasi |
+| Pricing | `/pricing` | Plan dan harga |
+| About | `/about` | Tentang perusahaan |
+| Contact | `/contact` | Form kontak |
+| Privacy | `/privacy` | Kebijakan privasi |
+| Terms | `/terms` | Syarat dan ketentuan |
+| FAQ | `/faq` | Pertanyaan umum |
+
+---
+
 ## 3. Flow Habit Logging
 
 ### 3.1 Flow Diagram

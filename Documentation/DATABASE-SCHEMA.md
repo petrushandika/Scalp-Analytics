@@ -6,6 +6,7 @@
 |-------|-------|
 | **Proyek** | Scalp Analytics |
 | **Database** | PostgreSQL 15+ |
+| **ORM** | SQLAlchemy 2.0+ |
 
 ---
 
@@ -21,6 +22,8 @@ erDiagram
     USERS ||--o{ NOTIFICATIONS : receives
     USERS ||--o{ NOTIFICATION_PREFERENCES : has
     USERS ||--o{ DEVICE_TOKENS : registers
+    USERS ||--o{ PASSWORD_RESETS : requests
+    USERS ||--o{ EMAIL_VERIFICATIONS : verifies
     TREATMENTS ||--o{ TREATMENT_SCHEDULES : has
     TREATMENT_SCHEDULES ||--o{ TREATMENT_LOGS : generates
     MEAL_LOGS ||--o{ MEAL_ITEMS : contains
@@ -35,6 +38,11 @@ erDiagram
         varchar hashed_password
         varchar full_name
         varchar avatar_url
+        integer height_cm
+        integer weight_kg
+        integer age
+        varchar gender
+        varchar activity_level
         boolean is_active
         boolean is_verified
         timestamp created_at
@@ -221,6 +229,24 @@ erDiagram
         boolean is_active
         timestamp created_at
     }
+    
+    PASSWORD_RESETS {
+        uuid id PK
+        uuid user_id FK
+        varchar token_hash UK
+        timestamp expires_at
+        boolean used
+        timestamp created_at
+    }
+    
+    EMAIL_VERIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        varchar token_hash UK
+        timestamp expires_at
+        boolean verified
+        timestamp created_at
+    }
 ```
 
 ---
@@ -232,18 +258,29 @@ erDiagram
 Menyimpan informasi autentikasi dan profil pengguna.
 
 ```sql
+CREATE TYPE gender AS ENUM ('male', 'female', 'other');
+CREATE TYPE activity_level AS ENUM ('sedentary', 'light', 'moderate', 'active', 'very_active');
+
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     hashed_password VARCHAR(255) NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     avatar_url VARCHAR(500),
+    height_cm INTEGER,
+    weight_kg DECIMAL(5,2),
+    age INTEGER,
+    gender gender,
+    activity_level activity_level,
     is_active BOOLEAN DEFAULT true,
     is_verified BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
-    CONSTRAINT email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
+    CONSTRAINT email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+    CONSTRAINT height_range CHECK (height_cm IS NULL OR (height_cm >= 100 AND height_cm <= 250)),
+    CONSTRAINT weight_range CHECK (weight_kg IS NULL OR (weight_kg >= 30 AND weight_kg <= 300)),
+    CONSTRAINT age_range CHECK (age IS NULL OR (age >= 13 AND age <= 120))
 );
 
 CREATE INDEX idx_users_email ON users(email);
@@ -255,6 +292,11 @@ COMMENT ON COLUMN users.email IS 'Alamat email pengguna (unik)';
 COMMENT ON COLUMN users.hashed_password IS 'Password yang dihash dengan bcrypt';
 COMMENT ON COLUMN users.is_active IS 'Status akun aktif/tidak aktif';
 COMMENT ON COLUMN users.is_verified IS 'Status email terverifikasi';
+COMMENT ON COLUMN users.height_cm IS 'Tinggi badan dalam centimeter untuk kalkulasi BMR';
+COMMENT ON COLUMN users.weight_kg IS 'Berat badan dalam kilogram untuk kalkulasi BMR';
+COMMENT ON COLUMN users.age IS 'Usia pengguna untuk kalkulasi BMR';
+COMMENT ON COLUMN users.gender IS 'Jenis kelamin untuk kalkulasi BMR';
+COMMENT ON COLUMN users.activity_level IS 'Tingkat aktivitas untuk kalkulasi TDEE';
 ```
 
 ### 2.2 Tabel Photos
@@ -1380,7 +1422,324 @@ pg_restore -U postgres -d scalpanalytics backup_20260320.dump
 
 ---
 
-## 9. Row-Level Security
+## 9. Tabel Password Reset dan Email Verification
+
+### 9.1 Tabel Password Resets
+
+Menyimpan token untuk reset password.
+
+```sql
+CREATE TABLE password_resets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(255) UNIQUE NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    used BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT valid_expiry CHECK (expires_at > created_at)
+);
+
+CREATE INDEX idx_password_resets_user_id ON password_resets(user_id);
+CREATE INDEX idx_password_resets_token_hash ON password_resets(token_hash);
+CREATE INDEX idx_password_resets_expires ON password_resets(expires_at);
+
+COMMENT ON TABLE password_resets IS 'Token untuk reset password pengguna';
+COMMENT ON COLUMN password_resets.token_hash IS 'Hash dari token reset password';
+COMMENT ON COLUMN password_resets.expires_at IS 'Waktu kedaluwarsa token (default: 1 jam)';
+COMMENT ON COLUMN password_resets.used IS 'Apakah token sudah digunakan';
+```
+
+### 9.2 Tabel Email Verifications
+
+Menyimpan token untuk verifikasi email.
+
+```sql
+CREATE TABLE email_verifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(255) UNIQUE NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    verified BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT valid_expiry CHECK (expires_at > created_at)
+);
+
+CREATE INDEX idx_email_verifications_user_id ON email_verifications(user_id);
+CREATE INDEX idx_email_verifications_token_hash ON email_verifications(token_hash);
+CREATE INDEX idx_email_verifications_expires ON email_verifications(expires_at);
+
+COMMENT ON TABLE email_verifications IS 'Token untuk verifikasi email pengguna';
+COMMENT ON COLUMN email_verifications.token_hash IS 'Hash dari token verifikasi';
+COMMENT ON COLUMN email_verifications.expires_at IS 'Waktu kedaluwarsa token (default: 24 jam)';
+COMMENT ON COLUMN email_verifications.verified IS 'Apakah email sudah terverifikasi';
+```
+
+---
+
+## 10. ORM Patterns dengan SQLAlchemy
+
+### 10.1 Base Model
+
+```python
+# app/infrastructure/database/base.py
+from datetime import datetime
+from uuid import uuid4
+from sqlalchemy import Column, DateTime, UUID
+from sqlalchemy.orm import DeclarativeBase
+
+class Base(DeclarativeBase):
+    """Base class untuk semua models."""
+    pass
+
+class BaseModel:
+    """Mixin untuk kolom umum."""
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+```
+
+### 10.2 User Model
+
+```python
+# app/infrastructure/database/models/user.py
+from sqlalchemy import Column, String, Boolean, Integer, Enum, Numeric
+from sqlalchemy.orm import relationship
+from app.infrastructure.database.base import Base, BaseModel
+
+class Gender(str):
+    MALE = 'male'
+    FEMALE = 'female'
+    OTHER = 'other'
+
+class ActivityLevel(str):
+    SEDENTARY = 'sedentary'
+    LIGHT = 'light'
+    MODERATE = 'moderate'
+    ACTIVE = 'active'
+    VERY_ACTIVE = 'very_active'
+
+class User(Base, BaseModel):
+    __tablename__ = 'users'
+    
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(100), nullable=False)
+    avatar_url = Column(String(500), nullable=True)
+    height_cm = Column(Integer, nullable=True)
+    weight_kg = Column(Numeric(5, 2), nullable=True)
+    age = Column(Integer, nullable=True)
+    gender = Column(Enum(Gender), nullable=True)
+    activity_level = Column(Enum(ActivityLevel), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    is_verified = Column(Boolean, default=False, nullable=False)
+    
+    # Relationships
+    photos = relationship("Photo", back_populates="user", cascade="all, delete-orphan")
+    habit_logs = relationship("HabitLog", back_populates="user", cascade="all, delete-orphan")
+    treatments = relationship("Treatment", back_populates="user", cascade="all, delete-orphan")
+    meal_logs = relationship("MealLog", back_populates="user", cascade="all, delete-orphan")
+    water_intakes = relationship("WaterIntake", back_populates="user", cascade="all, delete-orphan")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
+    notification_preferences = relationship("NotificationPreferences", back_populates="user", uselist=False)
+    device_tokens = relationship("DeviceToken", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+    password_resets = relationship("PasswordReset", back_populates="user", cascade="all, delete-orphan")
+    email_verifications = relationship("EmailVerification", back_populates="user", cascade="all, delete-orphan")
+    
+    def calculate_bmr(self) -> float:
+        """Kalkulasi Basal Metabolic Rate berdasarkan profil pengguna."""
+        if not all([self.weight_kg, self.height_cm, self.age, self.gender]):
+            return None
+        
+        weight = float(self.weight_kg)
+        height = float(self.height_cm)
+        age = self.age
+        
+        if self.gender == Gender.MALE:
+            bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+        else:
+            bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
+        
+        return bmr
+    
+    def calculate_tdee(self) -> float:
+        """Kalkulasi Total Daily Energy Expenditure."""
+        bmr = self.calculate_bmr()
+        if not bmr:
+            return None
+        
+        activity_multipliers = {
+            ActivityLevel.SEDENTARY: 1.2,
+            ActivityLevel.LIGHT: 1.375,
+            ActivityLevel.MODERATE: 1.55,
+            ActivityLevel.ACTIVE: 1.725,
+            ActivityLevel.VERY_ACTIVE: 1.9
+        }
+        
+        multiplier = activity_multipliers.get(self.activity_level, 1.2)
+        return bmr * multiplier
+    
+    def calculate_protein_target(self) -> float:
+        """Kalkulasi target protein harian untuk kesehatan rambut."""
+        if not self.weight_kg:
+            return None
+        # Target: 1.0g per kg body weight
+        return float(self.weight_kg) * 1.0
+```
+
+### 10.3 Password Reset Model
+
+```python
+# app/infrastructure/database/models/password_reset.py
+from datetime import datetime, timedelta
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from app.infrastructure.database.base import Base, BaseModel
+
+class PasswordReset(Base, BaseModel):
+    __tablename__ = 'password_resets'
+    
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    token_hash = Column(String(255), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used = Column(Boolean, default=False, nullable=False)
+    
+    # Relationships
+    user = relationship("User", back_populates="password_resets")
+    
+    @classmethod
+    def create(cls, user_id: UUID, token_hash: str, expiry_hours: int = 1):
+        """Create new password reset token."""
+        return cls(
+            user_id=user_id,
+            token_hash=token_hash,
+            expires_at=datetime.utcnow() + timedelta(hours=expiry_hours)
+        )
+    
+    def is_valid(self) -> bool:
+        """Check if token is valid."""
+        return not self.used and datetime.utcnow() < self.expires_at
+    
+    def mark_used(self):
+        """Mark token as used."""
+        self.used = True
+```
+
+### 10.4 Email Verification Model
+
+```python
+# app/infrastructure/database/models/email_verification.py
+from datetime import datetime, timedelta
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from app.infrastructure.database.base import Base, BaseModel
+
+class EmailVerification(Base, BaseModel):
+    __tablename__ = 'email_verifications'
+    
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    token_hash = Column(String(255), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    verified = Column(Boolean, default=False, nullable=False)
+    
+    # Relationships
+    user = relationship("User", back_populates="email_verifications")
+    
+    @classmethod
+    def create(cls, user_id: UUID, token_hash: str, expiry_hours: int = 24):
+        """Create new email verification token."""
+        return cls(
+            user_id=user_id,
+            token_hash=token_hash,
+            expires_at=datetime.utcnow() + timedelta(hours=expiry_hours)
+        )
+    
+    def is_valid(self) -> bool:
+        """Check if token is valid."""
+        return not self.verified and datetime.utcnow() < self.expires_at
+    
+    def mark_verified(self):
+        """Mark email as verified."""
+        self.verified = True
+```
+
+### 10.5 Repository Pattern
+
+```python
+# app/infrastructure/database/repositories/base.py
+from typing import Generic, TypeVar, Optional, List
+from uuid import UUID
+from sqlalchemy.orm import Session
+from app.infrastructure.database.base import Base
+
+ModelType = TypeVar("ModelType", bound=Base)
+
+class BaseRepository(Generic[ModelType]):
+    """Base repository dengan operasi CRUD umum."""
+    
+    def __init__(self, db: Session, model: type[ModelType]):
+        self.db = db
+        self.model = model
+    
+    def get(self, id: UUID) -> Optional[ModelType]:
+        """Get entity by ID."""
+        return self.db.query(self.model).filter(self.model.id == id).first()
+    
+    def get_multi(self, skip: int = 0, limit: int = 100) -> List[ModelType]:
+        """Get multiple entities."""
+        return self.db.query(self.model).offset(skip).limit(limit).all()
+    
+    def create(self, obj: ModelType) -> ModelType:
+        """Create new entity."""
+        self.db.add(obj)
+        self.db.commit()
+        self.db.refresh(obj)
+        return obj
+    
+    def update(self, obj: ModelType) -> ModelType:
+        """Update entity."""
+        self.db.commit()
+        self.db.refresh(obj)
+        return obj
+    
+    def delete(self, id: UUID) -> bool:
+        """Delete entity by ID."""
+        obj = self.get(id)
+        if obj:
+            self.db.delete(obj)
+            self.db.commit()
+            return True
+        return False
+
+class UserRepository(BaseRepository[User]):
+    """Repository untuk User entity."""
+    
+    def __init__(self, db: Session):
+        super().__init__(db, User)
+    
+    def get_by_email(self, email: str) -> Optional[User]:
+        """Get user by email."""
+        return self.db.query(User).filter(User.email == email).first()
+    
+    def get_active_users(self) -> List[User]:
+        """Get all active users."""
+        return self.db.query(User).filter(User.is_active == True).all()
+    
+    def verify_email(self, user_id: UUID) -> bool:
+        """Mark user email as verified."""
+        user = self.get(user_id)
+        if user:
+            user.is_verified = True
+            self.db.commit()
+            return True
+        return False
+```
+
+---
+
+## 11. Row-Level Security
 
 ```sql
 -- Enable RLS pada tabel sensitif

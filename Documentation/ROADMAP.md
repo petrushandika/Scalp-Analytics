@@ -5,24 +5,32 @@
 ## 1. Gambaran Umum
 
 ```mermaid
-gantt
-    title Roadmap Scalp Analytics
-    dateFormat YYYY-MM-DD
-    section Foundation
-    Project Setup           :a1, 2026-01-01, 7d
-    Database Design         :a2, after a1, 7d
-    Auth System             :a3, after a2, 7d
-    section Core Features
-    Photo Upload            :b1, after a3, 7d
-    AI Model                :b2, after b1, 7d
-    Habit Logger            :b3, after b2, 7d
-    Treatment Scheduler     :b4, after b3, 7d
-    section Analytics
-    Correlation Engine      :c1, after b4, 7d
-    Dashboard UI            :c2, after c1, 7d
-    section Polish
-    Testing                 :d1, after c2, 7d
-    Docker Deployment       :d2, after d1, 7d
+flowchart TB
+    subgraph Foundation
+        A[Project Setup] --> B[Database Design]
+        B --> C[Auth System]
+    end
+    
+    subgraph CoreFeatures[Core Features]
+        D[Photo Upload] --> E[AI Model]
+        E --> F[Habit Logger]
+        F --> G[Treatment Scheduler]
+        G --> H[Nutrition Tracker]
+    end
+    
+    subgraph Analytics
+        I[Correlation Engine] --> J[Dashboard UI]
+        J --> K[Recommendation System]
+    end
+    
+    subgraph Polish
+        L[Testing] --> M[Security Audit]
+        M --> N[Docker Deployment]
+    end
+    
+    C --> D
+    H --> I
+    K --> L
 ```
 
 ---

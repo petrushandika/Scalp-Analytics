@@ -62,19 +62,43 @@
 
 ### 1.3 Kode Status HTTP
 
-| Kode Status | Arti |
-|-------------|------|
-| 200 OK | Sukses GET/PUT |
-| 201 Created | Sukses POST |
-| 204 No Content | Sukses DELETE |
-| 400 Bad Request | Validation error |
-| 401 Unauthorized | Missing/invalid token |
-| 403 Forbidden | Insufficient permissions |
-| 404 Not Found | Resource tidak ditemukan |
-| 409 Conflict | Duplicate resource |
-| 422 Unprocessable Entity | Business logic error |
-| 429 Too Many Requests | Rate limit exceeded |
-| 500 Internal Server Error | Server error |
+| Kode Status | Arti | Keterangan |
+|-------------|------|------------|
+| **200 OK** | Sukses GET/PUT | Request berhasil diproses |
+| **201 Created** | Sukses POST | Resource baru berhasil dibuat |
+| **204 No Content** | Sukses DELETE | Request berhasil tanpa konten |
+| **400 Bad Request** | Validation error | Input tidak valid atau format salah |
+| **401 Unauthorized** | Missing/invalid token | Token tidak ada atau tidak valid |
+| **403 Forbidden** | Insufficient permissions | Tidak memiliki akses ke resource |
+| **404 Not Found** | Resource tidak ditemukan | Resource tidak ada atau sudah dihapus |
+| **409 Conflict** | Duplicate resource | Resource sudah ada (email sudah terdaftar) |
+| **422 Unprocessable Entity** | Business logic error | Valid tapi tidak bisa diproses |
+| **429 Too Many Requests** | Rate limit exceeded | Terlalu banyak request dalam waktu singkat |
+| **500 Internal Server Error** | Server error | Error tak terduga di server |
+| **502 Bad Gateway** | Upstream error | Error dari service eksternal |
+| **503 Service Unavailable** | Service down | Service sementara tidak tersedia |
+
+#### Error Response Codes
+
+| Kode Error | HTTP Status | Deskripsi |
+|------------|-------------|-----------|
+| VALIDATION_ERROR | 400 | Input tidak valid |
+| INVALID_EMAIL_FORMAT | 400 | Format email salah |
+| INVALID_PASSWORD_FORMAT | 400 | Password tidak memenuhi kriteria |
+| MISSING_REQUIRED_FIELD | 400 | Field wajib tidak diisi |
+| UNAUTHORIZED | 401 | Token tidak valid atau expired |
+| TOKEN_EXPIRED | 401 | JWT token sudah expired |
+| INVALID_TOKEN | 401 | Token format tidak valid |
+| FORBIDDEN | 403 | Tidak memiliki izin |
+| NOT_FOUND | 404 | Resource tidak ditemukan |
+| USER_NOT_FOUND | 404 | User tidak ditemukan |
+| PHOTO_NOT_FOUND | 404 | Foto tidak ditemukan |
+| CONFLICT | 409 | Resource sudah ada |
+| DUPLICATE_EMAIL | 409 | Email sudah terdaftar |
+| QUOTA_EXCEEDED | 429 | Kuota upload exceeded |
+| STORAGE_EXCEEDED | 429 | Storage limit exceeded |
+| RATE_LIMIT_EXCEEDED | 429 | Terlalu banyak request |
+| INTERNAL_ERROR | 500 | Error internal server |
 
 ---
 
@@ -117,7 +141,8 @@ Membuat akun pengguna baru.
       "is_active": true,
       "is_verified": false,
       "created_at": "2026-03-20T10:30:00Z"
-    }
+    },
+    "message": "Verification email sent. Please check your inbox."
   }
 }
 ```
@@ -237,6 +262,208 @@ Handle Google OAuth callback.
 #### Response Sukses (302)
 
 Redirects ke frontend dengan tokens di URL fragment.
+
+---
+
+### 2.7 Forgot Password
+
+**POST** `/api/auth/forgot-password`
+
+Meminta reset password. Akan mengirim email dengan link reset password.
+
+#### Request Body
+
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "If the email exists in our system, a password reset link has been sent."
+  }
+}
+```
+
+#### Response Error
+
+| Status | Kode | Deskripsi |
+|--------|------|-----------|
+| 400 | VALIDATION_ERROR | Format email tidak valid |
+| 429 | RATE_LIMIT_EXCEEDED | Terlalu banyak permintaan reset |
+
+#### Email Template
+
+```
+Subject: Reset Password - Scalp Analytics
+
+Halo {name},
+
+Kami menerima permintaan untuk reset password akun Anda.
+
+Klik link di bawah ini untuk reset password:
+{reset_url}
+
+Link ini akan kedaluwarsa dalam 1 jam.
+
+Jika Anda tidak meminta reset password, abaikan email ini.
+
+Terima kasih,
+Tim Scalp Analytics
+```
+
+---
+
+### 2.8 Reset Password
+
+**POST** `/api/auth/reset-password`
+
+Reset password menggunakan token dari email.
+
+#### Request Body
+
+```json
+{
+  "token": "abc123def456...",
+  "new_password": "NewSecurePassword456!"
+}
+```
+
+#### Request Schema
+
+| Field | Tipe | Required | Constraint |
+|-------|------|----------|------------|
+| token | string | Ya | Token dari email reset password |
+| new_password | string | Ya | Min 8 karakter, 1 uppercase, 1 angka |
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Password has been reset successfully. Please login with your new password."
+  }
+}
+```
+
+#### Response Error
+
+| Status | Kode | Deskripsi |
+|--------|------|-----------|
+| 400 | VALIDATION_ERROR | Password tidak memenuhi kriteria |
+| 400 | INVALID_TOKEN | Token tidak valid atau expired |
+| 404 | TOKEN_NOT_FOUND | Token tidak ditemukan |
+
+---
+
+### 2.9 Verify Email
+
+**POST** `/api/auth/verify-email`
+
+Verifikasi email pengguna menggunakan token dari email verifikasi.
+
+#### Request Body
+
+```json
+{
+  "token": "abc123def456..."
+}
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Email verified successfully.",
+    "user": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "email": "user@example.com",
+      "is_verified": true
+    }
+  }
+}
+```
+
+#### Response Error
+
+| Status | Kode | Deskripsi |
+|--------|------|-----------|
+| 400 | INVALID_TOKEN | Token tidak valid atau expired |
+| 404 | TOKEN_NOT_FOUND | Token tidak ditemukan |
+
+---
+
+### 2.10 Resend Verification Email
+
+**POST** `/api/auth/resend-verification`
+
+Kirim ulang email verifikasi.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Request Body
+
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Verification email sent. Please check your inbox."
+  }
+}
+```
+
+#### Response Error
+
+| Status | Kode | Deskripsi |
+|--------|------|-----------|
+| 400 | ALREADY_VERIFIED | Email sudah terverifikasi |
+| 429 | RATE_LIMIT_EXCEEDED | Terlalu banyak permintaan |
+
+---
+
+### 2.11 Check Email Availability
+
+**GET** `/api/auth/check-email`
+
+Mengecek apakah email sudah terdaftar.
+
+#### Query Parameters
+
+| Parameter | Tipe | Required | Deskripsi |
+|-----------|------|----------|-----------|
+| email | string | Ya | Email yang akan dicek |
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "available": false,
+    "message": "Email already registered"
+  }
+}
+```
 
 ---
 

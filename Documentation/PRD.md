@@ -310,27 +310,83 @@ flowchart TD
     B -->|Stres| C[Slider 1-10]
     B -->|Tidur| D[Input Jam]
     B -->|Air| E[Input Liter]
-    B -->|Nutrisi| F{Mode Input}
+    B -->|Olahraga| F{Pilih Jenis}
+    B -->|Merokok| G[Input Jumlah Rokok]
+    B -->|Alkohol| H[Input Jumlah Minuman]
+    B -->|Suplemen| I[Pilih dari DB]
+    B -->|Nutrisi| J{Mode Input}
     
-    F -->|Manual| G[Input Gram Manual]
-    F -->|Food DB| H[Cari Makanan]
+    F --> F1[Cardio]
+    F --> F2[Strength]
+    F --> F3[Flexibility]
+    F1 --> F4[Input Durasi Menit]
+    F2 --> F4
+    F3 --> F4
     
-    H --> I[Pilih Makanan]
-    I --> J[Pilih Porsi]
-    J --> K[Hitung Nutrisi Otomatis]
+    I --> I1[Pilih Suplemen]
+    I1 --> I2[Pilih Dosis]
+    I2 --> I3[Simpan]
     
-    G --> L[Simpan Log]
-    K --> L
-    C --> L
-    D --> L
-    E --> L
+    J -->|Manual| K[Input Gram Manual]
+    J -->|Food DB| L[Cari Makanan]
+    
+    L --> M[Pilih Makanan]
+    M --> N[Pilih Porsi]
+    N --> O[Hitung Nutrisi Otomatis]
+    
+    K --> P[Simpan Log]
+    O --> P
+    C --> P
+    D --> P
+    E --> P
+    F4 --> P
+    G --> P
+    H --> P
+    I3 --> P
 ```
 
-| Faktor | Tipe Input | Rentang | Frekuensi |
-|--------|------------|---------|-----------|
-| Tingkat Stres | Slider | 1-10 | Harian |
-| Durasi Tidur | Number | 0-24 jam | Harian |
-| Asupan Air | Number |0-5 liter | Harian |
+| Faktor | Tipe Input | Rentang | Frekuensi | Dampak |
+|--------|------------|---------|-----------|--------|
+| Tingkat Stres | Slider | 1-10 | Harian | Kortisol tinggi |
+| Durasi Tidur | Number | 0-24 jam | Harian | Regenerasi sel |
+| Asupan Air | Number | 0-5 liter | Harian | Hidrasi kulit kepala |
+| Olahraga | Checkbox + Select | Ya/Tidak + Jenis + Durasi | Harian | Sirkulasi darah |
+| Merokok | Number | 0-100 batang/hari | Harian | Kerusakan folikel |
+| Alkohol | Number | 0-20 gelas/hari | Harian | Dehidrasi, nutrient depletion |
+| Suplemen | Multi-select | Daftar suplemen | Harian | Nutrisi tambahan |
+| Nutrisi | Food Database | Gram/porsi | Harian | Komponen keratin |
+
+**Kategori Olahraga:**
+
+| Jenis | Deskripsi | Dampak |
+|-------|-----------|--------|
+| Cardio | Lari, sepeda, berenang | Meningkatkan sirkulasi |
+| Strength | Angkat beban, resistance | Meningkatkan testosteron sehat |
+| Flexibility | Yoga, stretching | Mengurangi stress |
+| HIIT | High intensity interval | Metabolisme, sirkulasi |
+| Walking | Jalan kaki | Sirkulasi ringan |
+
+**Database Suplemen:**
+
+| Suplemen | Dosis Umum | Nutrisi Utama |
+|----------|------------|---------------|
+| Biotin | 5000-10000 mcg | Biotin |
+| Zinc | 15-30 mg | Zinc |
+| Vitamin D | 1000-5000 IU | Vitamin D |
+| Iron | 18-27 mg | Iron |
+| Vitamin B12 | 500-1000 mcg | B12 |
+| Vitamin E | 200-400 IU | Vitamin E |
+| Omega-3 | 1000-3000 mg | Omega-3 |
+| Multivitamin | 1 tablet | Berbagai |
+
+**Lifestyle Factors untuk Risk Scoring:**
+
+| Faktor | Penilaian | Bobot Risk |
+|--------|-----------|------------|
+| Merokok | Jumlah batang/hari | 15% |
+| Alkohol | Jumlah gelas/minggu | 10% |
+| Olahraga | Frekuensi/minggu | 10% |
+| Suplemen | Ya/Tidak | 5% |
 
 #### Nutrition Tracker dengan Food Database
 
@@ -347,22 +403,43 @@ flowchart LR
         E[Custom Foods]
     end
 
+    subgraph UserProfile
+        F[Tinggi Badan]
+        G[Berat Badan]
+        H[Usia]
+        I[Jenis Kelamin]
+        J[Activity Level]
+    end
+
     subgraph Calculation
-        F[Protein]
-        G[Zinc]
-        H[Iron]
-        I[Biotin]
-        J[Vitamin D]
+        K[BMR Calculation]
+        L[Daily Nutrient Needs]
+        M[Protein Target]
+        N[Zinc Target]
+        O[Iron Target]
+        P[Biotin Target]
+        Q[Vitamin D Target]
     end
 
     A --> C
     A --> D
     A --> E
-    B --> F
-    B --> G
-    B --> H
-    B --> I
-    B --> J
+    B --> M
+    B --> N
+    B --> O
+    B --> P
+    B --> Q
+    F --> K
+    G --> K
+    H --> K
+    I --> K
+    J --> L
+    K --> L
+    L --> M
+    L --> N
+    L --> O
+    L --> P
+    L --> Q
 ```
 
 | Fitur | Deskripsi |
@@ -384,6 +461,52 @@ flowchart LR
 | Salmon | 100g | 25g | 0.6mg | 0.8mg | 5mcg | 526IU |
 | Almond | 28g| 6g | 0.9mg | 1mg | 1.5mcg | 0IU |
 | Buncis | 100g | 9g | 1.5mg | 3mg | 0mcg | 0IU |
+
+| Makanan | Porsi | Protein | Zinc | Iron | Biotin | Vitamin D |
+|---------|-------|---------|------|------|--------|------------|
+| Tempe | 100g | 19g | 1.0mg | 2.7mg | 0mcg | 0IU |
+| Bayam | 1 mangkuk | 3g | 0.5mg | 6.4mg | 0mcg | 0IU |
+| Telur | 1 butir | 6g | 0.5mg | 1mg | 10mcg | 41IU |
+| Salmon | 100g | 25g | 0.6mg | 0.8mg | 5mcg | 526IU |
+| Almond | 28g | 6g | 0.9mg | 1mg | 1.5mcg | 0IU |
+| Buncis | 100g | 9g | 1.5mg | 3mg | 0mcg | 0IU |
+
+**Kalkulasi Nutrisi Berdasarkan Profil:**
+
+Nutrisi target dihitung berdasarkan profil pengguna untuk memenuhi kebutuhan kesehatan rambut.
+
+| Profil Parameter | Penggunaan | Rumus BMR |
+|------------------|------------|-----------|
+| Tinggi Badan | Kalkulasi BMI | Pria: BMR = 88.362 + (13.397 × berat) + (4.799 × tinggi) - (5.677 × umur) |
+| Berat Badan | Kalkulasi BMI | Wanita: BMR = 447.593 + (9.247 × berat) + (3.098 × tinggi) - (4.330 × umur) |
+| Usia | Kalkulasi BMR | Activity multiplier: sedentary=1.2, light=1.375, moderate=1.55, active=1.725 |
+| Jenis Kelamin | Kalkulasi BMR | |
+| Activity Level | Kalori Harian | |
+
+**Target Nutrisi untuk Kesehatan Rambut:**
+
+| Nutrisi | Target Harian | Keterangan |
+|---------|---------------|------------|
+| Protein | 0.8-1.2g per kg berat badan | Komponen utama keratin |
+| Zinc | 8-11 mg | Pertumbuhan folikel |
+| Iron | 8-18 mg | Sirkulasi oksigen ke folikel |
+| Biotin | 30-100 mcg | Produksi keratin |
+| Vitamin D | 600-2000 IU | Pertumbuhan folikel baru |
+| Vitamin B12 | 2.4 mcg | Pembentukan sel darah merah |
+| Vitamin E | 15 mg | Antioksidan untuk kulit kepala |
+
+**Contoh Kalkulasi Berdasarkan Profil:**
+
+Profil: Pria, 70kg, 175cm, 30 tahun, aktivitas sedang
+
+| Nutrisi | Target | Perhitungan |
+|---------|--------|------------|
+| Kalori | 2400 kcal | BMR × activity factor |
+| Protein | 70g | 1.0g × 70kg |
+| Zinc | 11 mg | RDA pria dewasa |
+| Iron | 8 mg | RDA pria dewasa |
+| Biotin | 30 mcg | RDA |
+| Vitamin D | 600 IU | RDA |
 
 **Flow Pencatatan Nutrisi:**
 
@@ -408,6 +531,52 @@ sequenceDiagram
     A->>A: Update total nutrisi hari ini
     A->>U: Tampilkan total nutrisi
 ```
+
+#### User Profile untuk Nutrisi
+
+```mermaid
+flowchart TD
+    A[User Profile] --> B[Tinggi Badan cm]
+    A --> C[Berat Badan kg]
+    A --> D[Usia]
+    A --> E[Jenis Kelamin]
+    A --> F[Activity Level]
+    
+    B --> G[Kalkulasi BMR]
+    C --> G
+    D --> G
+    E --> G
+    
+    F --> H[Kalkulasi TDEE]
+    G --> H
+    
+    H --> I[Kalori Target]
+    H --> J[Protein Target]
+    H --> K[Zinc Target]
+    H --> L[Iron Target]
+    H --> M[Biotin Target]
+    H --> N[Vitamin D Target]
+    
+    I --> O[Daily Nutrition Goal]
+    J --> O
+    K --> O
+    L --> O
+    M --> O
+    N --> O
+    
+    O --> P[Track Progress]
+    P --> Q[Insight & Rekomendasi]
+```
+
+**Activity Level Options:**
+
+| Level | Deskripsi | Multiplier |
+|-------|-----------|------------|
+| Sedentary | Jarang olahraga, kerja kantor | 1.2 |
+| Light | Olahraga ringan 1-3 hari/minggu | 1.375 |
+| Moderate | Olahraga sedang 3-5 hari/minggu | 1.55 |
+| Active | Olahraga intens 6-7 hari/minggu | 1.725 |
+|Very Active | Atlet, pekerjaan fisik | 1.9 |
 
 #### Correlation Dashboard
 
@@ -457,20 +626,75 @@ flowchart TD
     C -->|Oily Scalp| D[Shampo Oily Scalp]
     C -->|Dry Scalp| E[Moisturizing Product]
     C -->|Dandruff| F[Ketoconazole Shampoo]
-    C -->|Hair Loss| G[Hair Tonic]
-    D --> H[Product Catalog]
-    E --> H
-    F --> H
-    G --> H
-    H --> I[Recommendation List]
+    C -->|Hair Loss Stage 1-2| G[Preventive Products]
+    C -->|Hair Loss Stage 3-4| H[Treatment Products]
+    C -->|Hair Loss Stage 5-6| I[Intensive Products]
+    C -->|Hair Loss Stage 7| J[Medical Referral]
+    C -->|Nutrition Deficiency| K[Supplements]
+    D --> L[Product Catalog]
+    E --> L
+    F --> L
+    G --> L
+    H --> L
+    I --> L
+    K --> L
+    L --> M[Recommendation List]
 ```
 
-| Kondisi | Rekomendasi Produk |
-|---------|-------------------|
-| Oily Scalp | Shampo oil control, Clay mask |
-| Dry Scalp | Moisturizing shampoo, Hair oil |
-| Dandruff | Ketoconazole shampoo, Anti-dandruff tonic |
-| Hair Loss | Minoxidil, Hair tonic, Biotin supplement |
+**Katalog Produk Berdasarkan Kondisi:**
+
+| Kondisi | Kategori | Produk Rekomendasi |
+|---------|----------|-------------------|
+| Oily Scalp | Shampo | Oil control shampoo, Clarifying shampoo |
+| Oily Scalp | Treatment | Clay mask, Scalp toner |
+| Dry Scalp | Shampo | Moisturizing shampoo, Hydrating shampoo |
+| Dry Scalp | Treatment | Hair oil, Scalp serum moisturizer |
+| Dandruff | Shampo | Ketoconazole shampoo, Zinc pyrithione shampoo |
+| Dandruff | Treatment | Anti-dandruff tonic, Scalp treatment |
+| Hair Loss Stage 1-2 | Shampo | Caffeine shampoo, Biotin shampoo |
+| Hair Loss Stage 1-2 | Tonic | Hair tonic, Scalp serum |
+| Hair Loss Stage 1-2 | Vitamin | Biotin supplement, Hair vitamin |
+| Hair Loss Stage 3-4 | Treatment | Minoxidil 2-5%, Finasteride |
+| Hair Loss Stage 3-4 | Tonic | Hair tonic dengan minoxidil |
+| Hair Loss Stage 3-4 | Serum | Scalp serum dengan peptide |
+| Hair Loss Stage 3-4 | Vitamin | Saw palmetto, Biotin complex |
+| Hair Loss Stage 5-6 | Treatment | Minoxidil 5%, Finasteride, Dutasteride |
+| Hair Loss Stage 5-6 | Serum | Growth serum, PRP therapy |
+| Hair Loss Stage 5-6 | Supplement | DHT blocker, Hair growth complex |
+| Hair Loss Stage 7 | Medical | Konsultasi dermatologist, Hair transplant |
+| Nutrition Deficiency | Protein | Whey protein, Collagen supplement |
+| Nutrition Deficiency | Zinc | Zinc supplement, Multivitamin |
+| Nutrition Deficiency | Iron | Iron supplement |
+| Nutrition Deficiency | Biotin | Biotin supplement, B-complex |
+| Nutrition Deficiency | Vitamin D | Vitamin D3 supplement |
+
+**Produk Berdasarkan Kategori:**
+
+| Kategori | Contoh Produk | Kegunaan |
+|----------|--------------|----------|
+| Shampo | Oil control, Moisturizing, Caffeine, Ketoconazole | Pembersih kulit kepala |
+| Conditioner | Hydrating, Volumizing | Melembutkan rambut |
+| Hair Tonic | Minoxidil-based, Natural ingredients | Stimulasi pertumbuhan |
+| Scalp Serum | Peptide serum, Growth serum | Treatment intensif |
+| Hair Vitamin | Biotin, Multivitamin rambut | Nutrisi dari dalam |
+| DHT Blocker | Saw palmetto, Pumpkin seed oil | Mencegah kerontokan |
+| Protein Supplement | Whey protein, Collagen | Protein untuk keratin |
+| Mineral Supplement | Zinc, Iron, Magnesium | Mineral esensial |
+| Hair Oil | Argan oil, Jojoba oil | Moisturizing |
+| Scalp Mask | Clay mask, Charcoal mask | Deep cleansing |
+
+**Rekomendasi Email:**
+
+Semua reminder dapat dikirim via email sesuai preferensi pengguna.
+
+| Tipe Email | Konten | Frekuensi |
+|------------|--------|-----------|
+| Treatment Reminder | Pengingat jadwal treatment | Sesuai jadwal |
+| Habit Reminder | Pengingat log harian | Harian (jika belum log) |
+| Photo Reminder | Pengingat foto mingguan | Mingguan |
+| Progress Update | Laporan progres mingguan | Mingguan |
+| Severity Alert | Perubahan severity signifikan | On-demand |
+| Product Recommendation | Rekomendasi produk baru | Bulanan |
 
 #### Content Recommendation
 
