@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Get commit message
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Conventional commit pattern
+# Format: type(scope): description
+# Examples:
+#   feat(photo): add photo upload functionality
+#   fix(auth): handle null response from token validation
+#   docs(readme): update setup instructions
+
+PATTERN='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?\!?: .{1,100}$'
+
+if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
+  echo "❌ Commit message does not follow conventional commit format."
+  echo ""
+  echo "Format: type(scope): description"
+  echo ""
+  echo "Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+  echo ""
+  echo "Examples:"
+  echo "  feat(photo): add photo upload functionality"
+  echo "  fix(auth): handle null response from token validation"
+  echo "  docs(readme): update setup instructions"
+  echo "  refactor(service): simplify photo processing logic"
+  exit 1
+fi
+
+echo "✅ Commit message format is valid."

@@ -1,0 +1,82 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Get list of staged files
+STAGED_PYTHON=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$' | head -20)
+STAGED_TYPESCRIPT=$(git diff --cached --name-only --diff-filter=ACM | grep '\.[jt]sx\?$' | head -20)
+
+# Backend checks
+if [ -n "$STAGED_PYTHON" ]; then
+  echo "🐍 Checking Python files..."
+  
+  cd backend || exit 1
+  
+  # Run ruff check
+  echo "  Running ruff check..."
+  ruff check $STAGED_PYTHON
+  
+  if [ $? -ne 0 ]; then
+    echo "❌ Ruff check failed"
+    exit 1
+  fi
+  
+  # Run ruff format check
+  echo "  Running ruff format check..."
+  ruff format --check $STAGED_PYTHON
+  
+  if [ $? -ne 0 ]; then
+    echo "❌ Ruff format check failed. Run 'ruff format .' to fix."
+    exit 1
+  fi
+  
+  # Run mypy
+  echo "  Running mypy..."
+  mypy $STAGED_PYTHON --ignore-missing-imports
+  
+  if [ $? -ne 0 ]; then
+    echo "❌ Mypy check failed"
+    exit 1
+  fi
+  
+  cd ..
+fi
+
+# Frontend checks
+if [ -n "$STAGED_TYPESCRIPT" ]; then
+  echo "📝 Checking TypeScript files..."
+  
+  cd frontend || exit 1
+  
+  # Run ESLint
+  echo "  Running ESLint..."
+  npm run lint -- --max-warnings=0 $STAGED_TYPESCRIPT
+  
+  if [ $? -ne 0 ]; then
+    echo "❌ ESLint check failed"
+    exit 1
+  fi
+  
+  # Run Prettier check
+  echo "  Running Prettier check..."
+  npm run format:check -- $STAGED_TYPESCRIPT
+  
+  if [ $? -ne 0 ]; then
+    echo "❌ Prettier check failed. Run 'npm run format' to fix."
+    exit 1
+  fi
+  
+  # Run TypeScript check
+  echo "  Running TypeScript check..."
+  npm run typecheck
+  
+  if [ $? -ne 0 ]; then
+    echo "❌ TypeScript check failed"
+    exit 1
+  fi
+  
+  cd ..
+fi
+
+echo "✅ All pre-commit checks passed!"

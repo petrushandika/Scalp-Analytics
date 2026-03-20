@@ -1,0 +1,25 @@
+# Dependencies
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+sqlalchemy[asyncio]>=2.0.0
+asyncpg>=0.30.0
+alembic>=1.14.0
+pydantic[email]>=2.10.0
+pydantic-settings>=2.6.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.20
+aiofiles>=24.1.0
+redis>=5.2.0
+aioredis>=2.0.1
+
+# AI/ML
+opencv-python>=4.10.0
+numpy>=2.0.0
+tensorflow>=2.18.0
+pillow>=11.0.0
+scipy>=1.14.0
+
+# Utilities
+httpx>=0.28.0
+python-dotenv>=1.0.0
