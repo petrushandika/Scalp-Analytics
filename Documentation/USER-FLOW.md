@@ -29,13 +29,14 @@ mindmap
       Input Tidur
       Input Air
       Input Nutrisi
+      Input Olahraga
       Food Database
     Photo Upload
       Pilih Sudut
-      Capture / Gallery
+      Capture atau Gallery
       Preview
       Analisis AI
-      Rekomendasi
+      Severity Report
     Treatment Management
       Buat Treatment
       Set Jadwal
@@ -60,28 +61,28 @@ flowchart TD
     B --> C{Sudah Punya Akun?}
     C -->|Ya| D[Login]
     C -->|Tidak| E[Form Registrasi]
-
+    
     E --> F[Input Email]
     F --> G[Input Password]
     G --> H[Input Nama]
     H --> I[Klik Register]
-
+    
     I --> J{Validasi OK?}
     J -->|Tidak| K[Tampilkan Error]
     K --> E
-
+    
     J -->|Ya| L[Kirim Email Verifikasi]
     L --> M[Cek Inbox]
     M --> N[Klik Link Verifikasi]
     N --> O[Setup Profil]
-
+    
     O --> P[Input Usia]
-    P --> Q[Pilih Tipe Rambut]
+    P --> Q[Pilih Gender]
     Q --> R[Set Goals]
     R --> S[Kuesioner Genetik]
     S --> T[Dashboard Tour]
     T --> U[Dashboard Home]
-
+    
     D --> V{Validasi OK?}
     V -->|Tidak| W[Tampilkan Error]
     W --> D
@@ -92,29 +93,43 @@ flowchart TD
 
 #### Layar Registrasi
 
-```mermaid
-flowchart LR
-    subgraph Form
-        direction TB
-        A[Email Input]
-        B[Password Input]
-        C[Nama Lengkap]
-        D[Buat Akun Button]
-        E[Link Login]
-    end
 ```
-
-| Field | Tipe | Placeholder | Validasi |
-|-------|------|-------------|----------|
-| Email | email | user@example.com | Format email valid |
-| Password | password | ••••••••••| Min 8 karakter |
-| Nama Lengkap | text | John Doe | Min 3 karakter |
++------------------------------------------------------------+
+|  LOGO                                          [Masuk]     |
++------------------------------------------------------------+
+|                                                            |
+|                    BUAT AKUN BARU                          |
+|                                                            |
+|  Email                                                     |
+|  +------------------------------------------------------+  |
+|  | user@example.com                                     |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Password                                                  |
+|  +------------------------------------------------------+  |
+|  | •••••••••••••                                         |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Nama Lengkap                                              |
+|  +------------------------------------------------------+  |
+|  | John Doe                                              |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  |                    BUAT AKUN                         |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Sudah punya akun? [Masuk di sini]                        |
+|                                                            |
++------------------------------------------------------------+
+```
 
 #### Layar Setup Profil
 
 | Field | Tipe | Options |
 |-------|------|---------|
 | Usia | dropdown | 18-65 |
+| Gender | radio button | Pria, Wanita |
 | Tipe Rambut | radio button | Lurus, Keriting, Bergelombang |
 | Tujuan | checkbox | Cegah kebotakan, Tingkatkan pertumbuhan, Pertahankan kondisi |
 
@@ -128,128 +143,230 @@ flowchart LR
 flowchart TD
     A[Buka Aplikasi] --> B[Dashboard]
     B --> C{Sudah Log Hari Ini?}
-
+    
     C -->|Belum| D[Tampilkan Prompt]
     C -->|Sudah| E[Tampilkan Status]
-
+    
     D --> F[Buka Form Logging]
     E --> G{Edit Data?}
     G -->|Ya| F
     G -->|Tidak| H[Lihat History]
-
+    
     F --> I[Input Tingkat Stres 1-10]
     I --> J[Input Jam Tidur]
     J --> K[Input Asupan Air]
-    K --> L[Input Nutrisi dari Makanan]
-
-    L --> M{Tambah Makanan?}
-    M -->|Ya| N[Cari / Pilih Makanan]
-    N --> O[Pilih Porsi]
-    O --> P[Hitung Nutrisi Otomatis]
-    P --> Q{Tambah Lagi?}
-    Q -->|Ya| N
-    Q -->|Tidak| R[Review Data]
-    M -->|Tidak| R
-
-    R --> S{Tambah Notes?}
-    S -->|Ya| T[Input Notes]
-    S -->|Tidak| U[Review Final]
-    T --> U
-
-    U --> V{Konfirmasi?}
-    V -->|Tidak| F
-    V -->|Ya| W[Submit Log]
-
-    W --> X[Update Database]
-    X --> Y[Update Analytics]
-    Y --> Z[Update Recommendations]
-    Z --> AA[Tampilkan Success]
-    AA --> AB[Dashboard Updated]
-
-    H --> AC[Pilih Tanggal]
-    AC --> AD[Edit atau Delete]
-    AD --> AE{Konfirmasi?}
-    AE -->|Ya| AF[Update Data]
-    AE -->|Tidak| H
-    AF --> AB
+    K --> L[Input Olahraga]
+    
+    L --> M{Jenis Olahraga}
+    M -->|Cardio| N[Input Durasi + Intensitas]
+    M -->|Strength| N
+    M -->|Lainnya| N
+    M -->|Tidak| O[Skip]
+    
+    N --> P[Input Nutrisi dari Makanan]
+    O --> P
+    
+    P --> Q{Mode Input Nutrisi}
+    Q -->|Manual| R[Input Gram Manual]
+    Q -->|Food DB| S[Cari Makanan]
+    
+    S --> T[Pilih Makanan]
+    T --> U[Pilih Porsi]
+    U --> V[Hitung Nutrisi Otomatis]
+    V --> W{Tambah Makanan Lagi?}
+    W -->|Ya| S
+    W -->|Tidak| X[Review Data]
+    R --> X
+    
+    X --> Y{Tambah Notes?}
+    Y -->|Ya| Z[Input Notes]
+    Y -->|Tidak| AA[Review Final]
+    Z --> AA
+    
+    AA --> AB{Konfirmasi?}
+    AB -->|Tidak| F
+    AB -->|Ya| AC[Submit Log]
+    
+    AC --> AD[Update Database]
+    AD --> AE[Update Analytics]
+    AE --> AF[Update Recommendations]
+    AF --> AG[Tampilkan Success]
+    AG --> AH[Dashboard Updated]
+    
+    H --> AI[Pilih Tanggal]
+    AI --> AJ[Edit atau Delete]
+    AJ --> AK{Konfirmasi?}
+    AK -->|Ya| AL[Update Data]
+    AK -->|Tidak| H
+    AL --> AH
 ```
 
-### 3.2 Flow Nutrisi Tracking
-
-```mermaid
-flowchart TD
-    A[Input Nutrisi] --> B{Mode Input}
-    B -->|Manual| C[Input Protein Manual]
-    B -->|Food Database| D[Buka Food Database]
-
-    C --> E[Input Gram]
-    E --> F[Simpan]
-
-    D --> G[Ketik Nama Makanan]
-    G --> H[Search Food API]
-    H --> I[Tampilkan Hasil Pencarian]
-
-    I --> J{Pilih Makanan}
-    J --> K[Tampilkan Info Nutrisi]
-    K --> L[Pilih Ukuran Porsi]
-
-    L --> M[Hitung Nutrisi Otomatis]
-    M --> N[Tambahkan ke Log]
-
-    N --> O[Update Total Nutrisi]
-    O --> P{Tambah Makanan Lain?}
-    P -->|Ya| D
-    P -->|Tidak| Q[Review Summary]
-
-    Q --> R[Simpan Log]
-```
-
-### 3.3 Wireframe Form Habit
+### 3.2 Wireframe Form Habit
 
 #### Layar Utama Log Habit
 
-| Section | Komponen | Tipe |
-|---------|----------|------|
-| Header | Title + Date | Text |
-| Stres | Rating Scale | Radio/Slider |
-| Tidur | Slider | Range 0-24 |
-| Air | Slider | Range 0-5L |
-| Nutrisi | Food Picker | Button + List |
-| Notes | Textarea | Text |
-| Action | Submit Button | Button |
-
-#### Layar Food Database Picker
-
-```mermaid
-flowchart LR
-    subgraph FoodPicker
-        direction TB
-        A[Search Bar]
-        B[Kategori Chips]
-        C[Hasil Pencarian]
-        D[Selected Items]
-        E[Konfirmasi Button]
-    end
+```
++------------------------------------------------------------+
+|  LOG HABIT HARIAN                              [Tanggal]   |
++------------------------------------------------------------+
+|                                                            |
+|  BAGAIMANA TINGKAT STRES ANDA HARI INI?                    |
+|                                                            |
+|  +------+------+------+------+------+                      |
+|  |  1   |  2   |  3   |  4   |  5   |                      |
+|  +------+------+------+------+------+                      |
+|  +------+------+------+------+------+                      |
+|  |  6   |  7   |  8   |  9   |  10  |                      |
+|  +------+------+------+------+------+                      |
+|                                                            |
++------------------------------------------------------------+
+|  BERAPA JAM TIDUR ANDA?                                    |
+|  +------------------------------------------------------+  |
+|  | 7.5 jam                                         ◀▶  |  |
+|  +------------------------------------------------------+  |
+|                                                            |
++------------------------------------------------------------+
+|  BERAPA LITER AIR YANG ANDA MINUM?                         |
+|  +------------------------------------------------------+  |
+|  | 2.5 liter                                       ◀▶  |  |
+|  +------------------------------------------------------+  |
+|                                                            |
++------------------------------------------------------------+
+|  APAKAH ANDA OLAHRAGA HARI INI?                            |
+|                                                            |
+|  [✓] Ya, saya olahraga    [ ] Tidak                       |
+|                                                            |
+|  Jenis Olahraga:                                          |
+|  +------------------------------------------------------+  |
+|  | [Cardio] [Strength] [Yoga] [Lainnya]                  |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Durasi:                                                   |
+|  +------------------------------------------------------+  |
+|  | 30 menit                                        ◀▶  |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Intensitas:                                               |
+|  +------------------------------------------------------+  |
+|  | [Ringan] [Sedang] [Berat]                             |  |
+|  +------------------------------------------------------+  |
+|                                                            |
++------------------------------------------------------------+
+|  NUTRISI MAKANAN                                           |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  |              + Tambah Makanan +                       |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Makanan Hari Ini:                                         |
+|  +------------------------------------------------------+  |
+|  | Tempe 100g           Protein: 19g    [Hapus]        |  |
+|  | Bayam 1 mangkuk      Protein: 3g     [Hapus]        |  |
+|  | Telur 1 butir        Protein: 6g     [Hapus]        |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Total Nutrisi:                                            |
+|  Protein: 28g | Zinc: 1.5mg | Iron: 7.1mg | Biotin: 10mcg|
+|                                                            |
++------------------------------------------------------------+
+|                                                            |
+|  +------------------------------------------------------+  |
+|  |                    SIMPAN LOG                         |  |
+|  +------------------------------------------------------+  |
+|                                                            |
++------------------------------------------------------------+
 ```
 
-| Komponen | Deskripsi |
-|----------|-----------|
-| Search Bar | Input untuk cari makanan |
-| Kategori Chips | Filter: Protein, Sayuran, Buah, dll |
-| Hasil Pencarian | List makanan dengan nutrisi info |
-| Selected Items | Daftar makanan yang dipilih |
-| Konfirmasi | Button untuk menambahkan ke log |
+### 3.3 Kategori Habit untuk Kesehatan Rambut
 
-#### Contoh Data Makanan
+| Kategori | Faktor | Tipe Input | Rentang | Frekuensi | Dampak |
+|----------|--------|------------|---------|-----------|--------|
+| Mental | Tingkat Stres | Slider | 1-10 | Harian | Stress tinggi kortisol mengganggu pertumbuhan rambut |
+| Tidur | Jam Tidur | Number | 0-24 jam | Harian | Tidur cukup penting untuk regenerasi sel |
+| Hidrasi | Asupan Air | Number | 0-5 liter | Harian | Hidrasi baik untuk sirkulasi kulit kepala |
+| Olahraga | Jenis Cardio | Checkbox | - | Harian | Meningkatkan sirkulasi darah ke folikel |
+| Olahraga | Jenis Strength | Checkbox | - | Harian | Meningkatkan testosteron (perlu diatur) |
+| Olahraga | Durasi | Number | 0-180 menit | Harian | Durasi optimal untuk kesehatan |
+| Olahraga | Intensitas | Radio | Ringan/Sedang/Berat | Harian | Intensitas mempengaruhi hormon |
+| Nutrisi | Protein | Food DB | gram | Harian | Komponen utama keratin |
+| Nutrisi | Zinc | Food DB | mg | Harian | Penting untuk pertumbuhan rambut |
+| Nutrisi | Iron | Food DB | mg | Harian | Penting untuk oksigenasi folikel |
+| Nutrisi | Biotin | Food DB | mcg | Harian | Vitamin B untuk rambut |
+| Nutrisi | Vitamin D | Food DB | IU | Harian | Penting untuk siklus rambut |
+| Nutrisi | Vitamin E | Food DB | mg | Harian | Antioksidan untuk kulit kepala |
+| Nutrisi | Vitamin B12 | Food DB | mcg | Harian | Penting untuk pertumbuhan sel |
 
-| Makanan | Porsi | Protein | Zinc | Iron | Biotin | Vitamin D |
-|---------|-------|---------|------|------|--------|------------|
-| Tempe | 100g | 19g | 1.0mg | 2.7mg | 0mcg | 0IU |
-| Bayam | 1 mangkuk | 3g | 0.5mg | 6.4mg | 0mcg | 0IU |
-| Telur | 1 butir | 6g | 0.5mg | 1mg | 10mcg | 41IU |
-| Salmon | 100g | 25g | 0.6mg | 0.8mg | 5mcg | 526IU |
-| Almond | 28g | 6g | 0.9mg | 1mg | 1.5mcg | 0IU |
-| Buncis | 100g | 9g | 1.5mg | 3mg | 0mcg | 0IU |
+### 3.4 Wireframe Food Database Picker
+
+```
++------------------------------------------------------------+
+|  TAMBAH MAKANAN                                    [Tutup]  |
++------------------------------------------------------------+
+|                                                            |
+|  +------------------------------------------------------+  |
+|  | 🔍 Cari makanan...                                    |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  KATEGORI:                                                 |
+|  [Protein] [Sayuran] [Buah] [Biji-bijian]                 |
+|  [Daging] [Seafood] [Kacangan] [Susu] [Lainnya]           |
+|                                                            |
++------------------------------------------------------------+
+|  HASIL PENCARIAN:                                         |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  | Tempe                        100g                    |  |
+|  | Protein: 19g | Zinc: 1.0mg | Iron: 2.7mg            |  |
+|  | Biotin: 0mcg | Vit D: 0IU                            |  |
+|  |                                           [+ Tambah]  |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  | Tahu                         100g                    |  |
+|  | Protein: 8g | Zinc: 0.8mg | Iron: 5.4mg            |  |
+|  | Biotin: 0mcg | Vit D: 0IU                            |  |
+|  |                                           [+ Tambah]  |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  | Telur                        1 butir (50g)           |  |
+|  | Protein: 6g | Zinc: 0.5mg | Iron: 1mg              |  |
+|  | Biotin: 10mcg | Vit D: 41IU                          |  |
+|  |                                           [+ Tambah]  |  |
+|  +------------------------------------------------------+  |
+|                                                            |
++------------------------------------------------------------+
+|  MAKANAN DIPILIH:                                          |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  | Tempe 100g × 1        Protein: 19g      [Hapus]     |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  |                    KONFIRMASI                         |  |
+|  +------------------------------------------------------+  |
+|                                                            |
++------------------------------------------------------------+
+```
+
+### 3.5 Contoh Data Makanan Lengkap
+
+| Makanan | Porsi | Protein | Zinc | Iron | Biotin | Vit D | Vit E | Vit B12 | Fiber |
+|---------|-------|---------|------|------|--------|-------|-------|---------|-------|
+| Tempe | 100g | 19g | 1.0mg | 2.7mg | 0mcg | 0IU | 0mg | 0mcg | 0mg |
+| Tahu | 100g | 8g | 0.8mg | 5.4mg | 0mcg | 0IU | 0mg | 0mcg | 0mg |
+| Bayam | 180g | 3g | 0.5mg | 6.4mg | 0mcg | 0IU | 2mg | 0mcg | 4g |
+| Telur | 50g | 6g | 0.5mg | 1mg | 10mcg | 41IU | 0.5mg | 0.5mcg | 0mg |
+| Salmon | 100g | 25g | 0.6mg | 0.8mg | 5mcg | 526IU | 2mg | 3mcg | 0mg |
+| Almond | 28g | 6g | 0.9mg | 1mg | 1.5mcg | 0IU | 7mg | 0mcg | 3.5g |
+| Buncis | 100g | 9g | 1.5mg | 3mg | 0mcg | 0IU | 0mg | 0mcg | 8g |
+| Ayam | 100g | 31g | 1.0mg | 1mg | 0mcg | 0IU | 0mg | 0.3mcg | 0mg |
+| Daging Sapi | 100g | 26g | 4.8mg | 2.5mg | 2mcg | 0IU | 0mg | 2.5mcg | 0mg |
+| Ubi | 100g | 2g | 0.3mg | 0.6mg | 0mcg | 0IU | 0mg | 0mcg | 3g |
+| Oatmeal | 100g | 13g | 2.3mg | 4.7mg | 0mcg | 0IU | 0mg | 0mcg | 10g |
+| Brokoli | 100g | 3g | 0.4mg | 0.7mg | 0mcg | 0IU | 0.8mg | 0mcg | 2.6g |
+| Kacang Tanah | 100g | 25g | 3.3mg | 2mg | 0mcg | 0IU | 4mg | 0mcg | 8.5g |
+| Lobster | 100g | 19g | 3.4mg | 0.6mg | 0mcg | 0IU | 2mg | 1mcg | 0mg |
 
 ---
 
@@ -261,75 +378,217 @@ flowchart LR
 flowchart TD
     A[Dashboard] --> B[Klik Upload Foto]
     B --> C[Pilih Sudut]
-
+    
     C --> D{Sudut Tersedia}
-    D -->|Front| E[Set Mode Front]
-    D -->|Top| F[Set Mode Top]
-    D -->|Side| G[Set Mode Side]
-
-    E --> H[Buka Kamera / Galeri]
-    F --> H
-    G --> H
-
-    H --> I{Pilih Source}
-    I -->|Kamera| J[Capture Photo]
-    I -->|Galeri| K[Pilih dari Galeri]
-
-    J --> L[Preview Foto]
-    K --> L
-
-    L --> M{Foto OK?}
-    M -->|Tidak| N[Retry]
-    N --> H
-
-    M -->|Ya| O[Validasi Foto]
-    O --> P{Validasi OK?}
-    P -->|Tidak| Q[Tampilkan Error]
-    Q --> H
-
-    P -->|Ya| R[Compress Foto]
-    R --> S[Upload ke Server]
-    S --> T[Tampilkan Progress]
-
-    T --> U{Upload Complete}
-    U -->|Gagal| V[Tampilkan Error]
-    V --> H
-
-    U -->|Sukses| W[Queue Analisis AI]
-    W --> X[Tampilkan Status Processing]
-    X --> Y[AI Processing]
-
-    Y --> Z[Hasil Analisis]
-    Z --> AA[Deteksi Tipe Kulit Kepala]
-    AA --> AB[Generate Rekomendasi]
-    AB --> AC{Sudah Upload Semua Sudut?}
-
-    AC -->|Tidak| AD[Tampilkan Sudut Belum Upload]
-    AD --> C
-
-    AC -->|Ya| AE[Dashboard dengan Rekomendasi]
+    D -->|Depan| E[Set Mode Front]
+    D -->|Atas| F[Set Mode Top]
+    D -->|Kanan| G[Set Mode Right]
+    D -->|Kiri| H[Set Mode Left]
+    D -->|Custom| I[Label Custom Spot]
+    
+    E --> J[Buka Kamera atau Galeri]
+    F --> J
+    G --> J
+    H --> J
+    I --> J
+    
+    J --> K{Pilih Source}
+    K -->|Kamera| L[Capture Photo]
+    K -->|Galeri| M[Pilih dari Galeri]
+    
+    L --> N[Preview Foto]
+    M --> N
+    
+    N --> O{Foto OK?}
+    O -->|Tidak| P[Retry]
+    P --> J
+    
+    O -->|Ya| Q[Validasi Foto]
+    Q --> R{Validasi OK?}
+    R -->|Tidak| S[Tampilkan Error]
+    S --> J
+    
+    R -->|Ya| T[Compress Foto]
+    T --> U[Upload ke Server]
+    U --> V[Tampilkan Progress]
+    
+    V --> W{Upload Complete}
+    W -->|Gagal| X[Tampilkan Error]
+    X --> J
+    
+    W -->|Sukses| Y[Queue Analisis AI]
+    Y --> Z[Tampilkan Status Processing]
+    Z --> AA[AI Processing]
+    
+    AA --> AB[Hasil Analisis]
+    AB --> AC[Hitung Density]
+    AC --> AD[Klasifikasi Severity]
+    AD --> AE[Deteksi Balding Area]
+    AE --> AF{Sudah Upload Semua Sudut?}
+    
+    AF -->|Tidak| AG[Tampilkan Sudut Belum Upload]
+    AG --> C
+    
+    AF -->|Ya| AH[Dashboard dengan Rekomendasi]
 ```
 
-### 4.2 Wireframe Hasil Analisis
+### 4.2 Batasan Upload Foto
 
-#### Layar Hasil Analisis
+| Limit | Nilai | Deskripsi |
+|-------|-------|-----------|
+| Ukuran File Maksimal | 10MB | Sebelum kompresi |
+| Ukuran Setelah Kompresi | 500 KB - 2 MB | Target optimal |
+| Resolusi Minimum | 720p (1280x720) | Untuk akurasi AI |
+| Resolusi Maksimum | 4K (3840x2160) | Akan dikompresi |
+| Format Didukung | JPEG, PNG, WebP | Otomatis convert ke JPEG |
+| Foto Per Sudut | 1 foto | Hanya foto terbaru per sudut |
+| Total Foto Aktif | 25 foto | 5 sudut x 5 histori |
+| Histori Tersimpan | 5 per sudut | Foto lama otomatis diarsipkan |
+| Storage Limit | 500 MB | Batas per pengguna |
 
-| Komponen | Data | Deskripsi |
-|----------|------|-----------|
-| Thumbnail | Image | Preview foto yang diupload |
-| Hair Density | Percentage | Kepadatan rambut (0-100%) |
-| Scalp Type | Label | Tipe kulit kepala |
-| Confidence | Percentage | Akurasi prediksi AI |
-| Recommendations | List | Produk yang disarankan |
-| Comparison | Diff | Perbandingan dengan foto sebelumnya |
+### 4.3 Flow Severity Classification
+
+```mermaid
+flowchart TD
+    A[Photo Analysis Complete] --> B[Calculate Density]
+    B --> C{Density Percentage}
+    
+    C -->|>85%| D[Stage 0: No Hair Loss]
+    C -->|70-85%| E[Stage 1-2: Minimal]
+    C -->|50-70%| F[Stage 3-4: Moderate]
+    C -->|30-50%| G[Stage 5-6: Advanced]
+    C -->|<30%| H[Stage 7: Severe]
+    
+    D --> I[Rekomendasi Preventif]
+    E --> J[Monitoring dan Treatment Awal]
+    F --> K[Treatment Aktif]
+    G --> L[Treatment Intensif]
+    H --> M[Konsultasi Medis]
+```
+
+### 4.3 Wireframe Hasil Analisis
+
+#### Layar Hasil Analisis Foto
+
+```
++------------------------------------------------------------+
+|  HASIL ANALISIS                                  [Tutup]   |
++------------------------------------------------------------+
+|                                                            |
+|  +------------------------------------------------------+  |
+|  |                                                      |  |
+|  |              [Thumbnail Foto]                        |  |
+|  |                                                      |  |
+|  |                   62.5%                              |  |
+|  |           Kepadatan Rambut                           |  |
+|  |                                                      |  |
+|  |   Severity: Stage 3-4 (Moderate Hair Loss)         |  |
+|  |   Confidence: 88%                                    |  |
+|  |   Confidence Severity: 85%                           |  |
+|  |                                                      |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  |              REKOMENDASI PRODUK                      |  |
+|  |                                                      |  |
+|  |  1. Minoxidil 5% Solution                           |  |
+|  |  2. Hair Vitamin (Biotin + Zinc)                    |  |
+|  |  3. Scalp Serum dengan Niacin                       |  |
+|  |                                                      |  |
+|  |  [Lihat Detail Produk]                              |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  |              PERBANDINGAN                            |  |
+|  |                                                      |  |
+|  |  Sebelum: 65.0% (2 minggu lalu)                      |  |
+|  |  Sekarang: 62.5% (hari ini)                          |  |
+|  |  Perubahan: -2.5%                                    |  |
+|  |                                                      |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  |          Lihat Grafik Progress                       |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  |          Upload Foto Lainnya                         |  |
+|  +------------------------------------------------------+  |
+|                                                            |
++------------------------------------------------------------+
+```
 
 #### Layar Pilih Sudut Foto
 
-| Sudut | Status | Preview |
-|-------|--------|---------|
-| Front | Belum/Sudah | Thumbnail jika sudah |
-| Top | Belum/Sudah | Thumbnail jika sudah |
-| Side | Belum/Sudah | Thumbnail jika sudah |
+```
++------------------------------------------------------------+
+|  PILIH SUDUT FOTO                                          |
++------------------------------------------------------------+
+|                                                            |
+|  Pilih sudut foto untuk diupload:                          |
+|                                                            |
+|  +------------+  +------------+  +------------+           |
+|  |   DEPAN    |  |    ATAS    |  |   KANAN    |           |
+|  |            |  |            |  |            |           |
+|  |   Front    |  |    Top     |  |   Right    |           |
+|  |   ✓ Done   |  |   ✓ Done   |  |   ✓ Done   |           |
+|  +------------+  +------------+  +------------+           |
+|                                                            |
+|  +------------+  +------------+                           |
+|  |    KIRI    |  |   CUSTOM   |                           |
+|  |            |  |            |                           |
+|  |   Left     |  |  Area Botak|                           |
+|  |   ✓ Done   |  |   Pending  |                           |
+|  +------------+  +------------+                           |
+|                                                            |
++------------------------------------------------------------+
+|  STATUS UPLOAD:                                            |
+|                                                            |
+|  ✓ Depan (75.2%) - 3 hari lalu                            |
+|  ✓ Atas (58.3%) - 3 hari lalu                            |
+|  ✓ Kanan (68.1%) - 3 hari lalu                           |
+|  ✓ Kiri (70.5%) - 3 hari lalu                            |
+|  ○ Custom - Belum                                          |
+|                                                            |
+|  Progress: 4/5 sudut (80%)                                 |
+|                                                            |
++------------------------------------------------------------+
+```
+
+#### Layar Severity Report
+
+```
++------------------------------------------------------------+
+|                 LAPORAN SEVERITY                          |
++------------------------------------------------------------+
+|                                                            |
+|  STAGE SAAT INI: Stage 3-4 (Moderate Hair Loss)           |
+|                                                            |
+|  Density Total: 62.5%                                      |
+|                                                            |
++------------------------------------------------------------+
+|  ANALISIS PER SUDUT:                                       |
+|                                                            |
+|  | Sudut    | Density | Stage   | Trend      |           |
+|  |----------|---------|---------|------------|           |
+|  | Depan    | 75.2%   | Stage 2 | Stabil    |           |
+|  | Atas     | 58.3%   | Stage 4 | Menurun   |           |
+|  | Kanan    | 68.1%   | Stage 3 | Stabil    |           |
+|  | Kiri     | 70.5%   | Stage 2 | Membaik   |           |
+|  | Custom   | 45.0%   | Stage 5 | Menurun   |           |
+|                                                            |
++------------------------------------------------------------+
+|  REKOMENDASI:                                              |
+|                                                            |
+|  1. [Prioritas Tinggi] Area crown memerlukan perhatian    |
+|  2. [Prioritas Sedang] Monitor area temporal kiri/kanan  |
+|  3. Lanjutkan treatment minoxidil                        |
+|  4. Upload foto setiap 2 minggu                           |
+|                                                            |
+|  [Lihat Detail Rekomendasi]                               |
+|                                                            |
++------------------------------------------------------------+
+```
 
 ---
 
@@ -341,90 +600,164 @@ flowchart TD
 flowchart TD
     A[Halaman Treatment] --> B[Klik Tambah Treatment]
     B --> C[Form Nama Treatment]
-
-    C --> D[Input Nama]
-    D --> E[Input Dosis]
-    E --> F[Pilih Frekuensi]
-
-    F --> G{Frekuensi}
-    G -->|Harian| H[Set Waktu]
-    G -->|Mingguan| I[Pilih Hari]
-    G -->|Custom| J[Set Jadwal Custom]
-
-    H --> K[Add Multiple Times]
-    I --> K
-    J --> K
-
-    K --> L{Tambah Waktu Lain?}
-    L -->|Ya| M[Tambah Schedule]
-    M --> K
-    L -->|Tidak| N[Preview Treatment]
-
-    N --> O{Konfirmasi?}
-    O -->|Tidak| C
-    O -->|Ya| P[Save Treatment]
-
-    P --> Q[Generate Daily Checklists]
-    Q --> R[Tampilkan Success]
-    R --> S[Redirect ke Treatment List]
+    
+    C --> D{Pilih Tipe Treatment}
+    D -->|Minoxidil| E[Form Minoxidil]
+    D -->|Vitamin Rambut| F[Form Vitamin]
+    D -->|Scalp Treatment| G[Form Scalp]
+    D -->|Lainnya| H[Form Custom]
+    
+    E --> I[Input Dosis: 5%]
+    E --> J[Pilih Frekuensi]
+    
+    F --> K[Input Nama Vitamin]
+    F --> L[Input Dosis: mg/mcg]
+    F --> J
+    
+    G --> M[Input Nama Scalp Treatment]
+    G --> N[Input Cara Pakai]
+    G --> J
+    
+    H --> O[Input Nama Custom]
+    O --> J
+    
+    J --> P{Frekuensi}
+    P -->|Harian| Q[Set Waktu]
+    P -->|Mingguan| R[Pilih Hari]
+    P -->|Custom| S[Set Jadwal Custom]
+    
+    Q --> T[Add Multiple Times]
+    R --> T
+    S --> T
+    
+    T --> U{Tambah Waktu Lain?}
+    U -->|Ya| V[Tambah Schedule]
+    V --> T
+    U -->|Tidak| W[Preview Treatment]
+    
+    W --> X{Konfirmasi?}
+    X -->|Tidak| C
+    X -->|Ya| Y[Save Treatment]
+    
+    Y --> Z[Generate Daily Checklists]
+    Z --> AA[Tampilkan Success]
+    AA --> AB[Redirect ke Treatment List]
 ```
 
-### 5.2 Flow Checklist Harian
+### 5.2 Tipe Treatment
 
-```mermaid
-flowchart TD
-    A[Buka Aplikasi] --> B[Dashboard]
-    B --> C{Ada Jadwal Hari Ini?}
-
-    C -->|Tidak| D[Tampilkan No Treatment]
-    C -->|Ya| E[Load Checklist]
-
-    E --> F[Item 1: Morning Treatment]
-    F --> G{Sudah Complete?}
-
-    G -->|Sudah| H[Tampilkan Checkmark]
-    G -->|Belum| I[Tampilkan Button Complete]
-
-    H --> J[Item 2: Evening Treatment]
-    I --> J
-
-    J --> K{Sudah Complete?}
-    K -->|Sudah| L[Checkmark]
-    K -->|Belum| M[Button Complete]
-
-    L --> N{Semua Complete?}
-    M --> N
-
-    N -->|Ya| O[Update Streak]
-    N -->|Tidak| P[Tampilkan Progress]
-
-    O --> Q[Tampilkan Celebration]
-    Q --> R[Dashboard dengan Streak Updated]
-    P --> R
-```
+| Tipe | Deskripsi | Contoh Produk |
+|------|-----------|---------------|
+| Minoxidil | Topical solution untuk stimulasi folikel | Minoxidil 2%, Minoxidil 5%, Minoxidil Foam |
+| Finasteride | Oral medication untuk blok DHT | Finasteride 1mg |
+| Hair Vitamin | Suplemen untuk nutrisi rambut | Biotin, Zinc, Vitamin D, Multivitamin Rambut |
+| Scalp Serum | Serum untuk kulit kepala | Niacinamide serum, Peptide serum, Rosemary oil |
+| Scalp Shampoo | Shampo khusus kulit kepala | Ketoconazole, Oil control, Anti-dandruff |
+| Scalp Massage | Terapi pijat kulit kepala | Derma roller, Scalp massager |
+| PRP Treatment | Platelet-rich plasma therapy | PRP injection (medical procedure) |
+| Low-Level Laser | Laser therapy untuk rambut | Laser comb, Laser cap |
+| Custom | Treatment lainnya | Sesuai kebutuhan pengguna |
 
 ### 5.3 Wireframe Checklist Treatment
 
-#### Layar Checklist
+```
++------------------------------------------------------------+
+|              CHECKLIST HARIAN                               |
++------------------------------------------------------------+
+|                                                            |
+|  +------------------------------------------------------+  |
+|  | ☑ MINOXIDIL 5% SOLUTION - PAGI                       |  |
+|  |   08:00     ✓ Selesai 08:05                          |  |
+|  |   1ml applied to crown and temples                   |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  | ○ MINOXIDIL 5% SOLUTION - MALAM                      |  |
+|  |   20:00     Belum                                     |  |
+|  |   1ml applied to crown and temples                   |  |
+|  |   +----------------------------------------------+    |  |
+|  |   |            Tandai Selesai                     |    |  |
+|  |   +----------------------------------------------+    |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  | ☑ HAIR VITAMIN (BIOTIN + ZINC)                       |  |
+|  |   09:00     ✓ Selesai 09:15                          |  |
+|  |   1 tablet setelah makan                              |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  | ○ SCALP SERUM                                        |  |
+|  |   21:00     Belum                                     |  |
+|  |   Apply to scalp after minoxidil dries               |  |
+|  |   +----------------------------------------------+    |  |
+|  |   |            Tandai Selesai                     |    |  |
+|  |   +----------------------------------------------+    |  |
+|  +------------------------------------------------------+  |
+|                                                            |
++------------------------------------------------------------+
+|  STATISTIK HARIAN:                                         |
+|                                                            |
+|  Penyelesaian: 2/4 (50%)                                   |
+|  Streak Saat Ini: 7 hari                                   |
+|  Kepatuhan Minggu Ini: 85%                                 |
+|                                                            |
++------------------------------------------------------------+
+```
 
-| Komponen | Tipe | Deskripsi |
-|----------|------|-----------|
-| Treatment Name | Text | Nama treatment |
-| Schedule Time | Time | Waktu jadwal |
-| Status | Checkbox | Selesai/belum |
-| Complete Button | Button | Tandai selesai |
-| Progress Bar | Visual | Persentase penyelesaian |
-| Streak Badge | Badge | Hari berturut-turut |
+### 5.4 Wireframe Tambah Treatment
 
-#### Layar Tambah Treatment
-
-| Field | Tipe | Options |
-|-------|------|---------|
-| Nama Treatment | text | Minoxidil 5% |
-| Dosis | text | 1 ml |
-| Frekuensi | radio | Harian, Mingguan, Custom |
-| Jadwal | checkbox | Sen-Sen |
-| Waktu | time picker | 08:00 |
+```
++------------------------------------------------------------+
+|            TAMBAH TREATMENT BARU                            |
++------------------------------------------------------------+
+|                                                            |
+|  TIPE TREATMENT:                                           |
+|                                                            |
+|  [Minoxidil] [Finasteride] [Vitamin] [Scalp Serum]         |
+|  [Shampoo] [Massage] [Laser] [Custom]                      |
+|                                                            |
++------------------------------------------------------------+
+|  DETAIL TREATMENT:                                         |
+|                                                            |
+|  Nama Treatment:                                           |
+|  +------------------------------------------------------+  |
+|  | Minoxidil 5% Solution                                |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Dosis:                                                    |
+|  +------------------------------------------------------+  |
+|  | 1 ml                                                 |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Frekuensi:                                                |
+|  +------------------------------------------------------+  |
+|  | [Harian] [Mingguan] [Custom]                         |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Jadwal:                                                   |
+|  +------------------------------------------------------+  |
+|  | [✓Sen] [✓Sel] [✓Rab] [✓Kam] [✓Jum] [✓Sab] [✓Min]    |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Waktu:                                                    |
+|  +------------------------------------------------------+  |
+|  | 08:00 dan 20:00                                 [+Tambah Waktu] |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  Cara Pakai / Notes:                                       |
+|  +------------------------------------------------------+  |
+|  | Apply 1ml to scalp, focusing on thinning areas.     |  |
+|  | Massage gently for 1-2 minutes. Wait 4 hours before  |  |
+|  | washing hair.                                        |  |
+|  +------------------------------------------------------+  |
+|                                                            |
+|  +------------------------------------------------------+  |
+|  |                    SIMPAN                             |  |
+|  +------------------------------------------------------+  |
+|                                                            |
++------------------------------------------------------------+
+```
 
 ---
 
@@ -435,34 +768,34 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Login Success] --> B[Load Dashboard]
-
+    
     B --> C[Fetch User Data]
     C --> D[Fetch Today Tasks]
     D --> E[Fetch Photo Data]
     E --> F[Fetch Habit Data]
     F --> G[Fetch Nutrition Data]
     G --> H[Fetch Treatment Data]
-
+    
     H --> I[Calculate Analytics]
-    I --> J[Calculate Risk Score]
+    I --> J[Calculate Severity]
     J --> K[Generate Insights]
-
+    
     K --> L[Render Dashboard]
-
+    
     L --> M{Quick Stats Section}
     M --> N[Hair Growth Percent]
-    M --> O[Treatment Streak]
-    M --> P[Compliance Rate]
-    M --> Q[Stress Average]
+    M --> O[Current Severity]
+    M --> P[Treatment Streak]
+    M --> Q[Compliance Rate]
     M --> R[Nutrition Score]
-
+    
     L --> S{Progress Chart Section}
     S --> T[Render Line Chart]
     T --> U[Show Trends]
-
+    
     L --> V{Today Tasks}
     V --> W[Tampilkan Checklist]
-
+    
     L --> X{Insights Section}
     X --> Y[Tampilkan Correlations]
     Y --> Z[Tampilkan Recommendations]
@@ -470,32 +803,72 @@ flowchart TD
 
 ### 6.2 Wireframe Dashboard
 
-#### Layar Dashboard Utama
-
-| Section | Komponen | Data |
-|---------|----------|------|
-| Header | Welcome + Avatar | Nama pengguna |
-| Quick Stats | 4 Cards | Growth, Streak, Compliance, Risk |
-| Progress Chart | Line Chart | Trend kepadatan |
-| Today Tasks | Checklist | Task harian |
-| Insights | Cards | AI insights |
-| Recommendations | List | Produk, video, artikel |
-
-#### Layar Statistik Detail
-
-| Tab | Content |
-|-----|---------|
-| Minggu | Data 7 hari terakhir |
-| Bulan | Data 30 hari terakhir |
-| 3 Bulan | Data 90 hari terakhir |
-| 6 Bulan | Data 180 hari terakhir |
-
-| Chart | Data Source |
-|-------|-------------|
-| Hair Density | Photo analysis results |
-| Stress Correlation | Habit logs |
-| Nutrition Intake | Food logs |
-| Risk Score Breakdown | Genetic + Lifestyle |
+```
++------------------------------------------------------------------------+
+|  DASHBOARD HOME                              [Profil] [Settings]       |
++------------------------------------------------------------------------+
+|  Selamat datang, John!                                                  |
++------------------------------------------------------------------------+
+|                        STATISTIK CEPAT                                 |
+|                                                                        |
+|  +--------------+ +--------------+ +--------------+ +--------------+    |
+|  | PERTUMBUHAN  | | SEVERITY     | | STREAK       | | KEPATUHAN   |    |
+|  | -2.5%        | | Stage 3-4    | | 7 hari       | | 85%          |    |
+|  | ↓ 2 minggu   | | Moderate     | | Active       | | Minggu Ini   |    |
+|  +--------------+ +--------------+ +--------------+ +--------------+    |
++------------------------------------------------------------------------+
+|                    TREND KEPADATAN RAMBUT                              |
+|                                                                        |
+|   80% ┤                     ●●●                                       |
+|   70% ┤               ●●●●                                           |
+|   60% ┤         ●●●●                                                 |
+|   50% ┤   ●●●●                                                        |
+|       └───────┬───────┬───────┬───────                               |
+|              W1      W2      W3      W4                                |
++------------------------------------------------------------------------+
+|                    SEVERITY PER SUDUT                                  |
+|                                                                        |
+|  | Sudut | Density | Stage   | Status   |                             |
+|  |-------|---------|---------|----------|                             |
+|  | Depan | 75.2%   | Stage 2 | Stabil   |                             |
+|  | Atas  | 58.3%   | Stage 4 | Menurun  |                             |
+|  | Kanan | 68.1%   | Stage 3 | Stabil   |                             |
+|  | Kiri  | 70.5%   | Stage 2 | Membaik  |                             |
++------------------------------------------------------------------------+
+|                    NUTRISI HARIAN                                       |
+|                                                                        |
+|  | Nutrisi  | Aktual | Target | Status  |                             |
+|  |----------|--------|--------|---------|                             |
+|  | Protein  | 28g    | 50g    | 56%     |                             |
+|  | Zinc     | 1.5mg  | 11mg   | 14%     |                             |
+|  | Iron     | 7.1mg  | 18mg   | 39%     |                             |
+|  | Biotin   | 10mcg  | 30mcg  | 33%     |                             |
+|  | Vit D    | 41IU   | 600IU  | 7%      |                             |
++------------------------------------------------------------------------+
+|                    TASK HARI INI                                        |
+|                                                                        |
+|  □ Log habit (stres, tidur, air, nutrisi, olahraga)                   |
+|  □ Selesaikan treatment malam (Minoxidil + Scalp Serum)                |
+|  □ Upload foto mingguan                                                |
+|  ☑ Treatment pagi selesai (Minoxidil + Vitamin)                       |
++------------------------------------------------------------------------+
+|                    INSIGHT                                              |
+|                                                                        |
+|  Kepadatan rambut Anda menurun 2.5% dalam 2 minggu                     |
+|  Area crown memerlukan perhatian lebih                                                  |
+|  Asupan Zinc dan Biotin masih di bawah target                          |
+|  Intensitas olahraga tinggi dapat meningkatkan DHT                     |
++------------------------------------------------------------------------+
+|                    REKOMENDASI                                          |
+|                                                                        |
+|  Minoxidil 5% Solution                                                |
+|  Hair Vitamin (Biotin + Zinc + Iron)                                   |
+|  Scalp Serum dengan Niacinamide                                        |
+|  Ketoconazole Shampoo (untuk oily scalp)                              |
+|                                                                        |
+|  [Lihat Semua Produk]                                                   |
++------------------------------------------------------------------------+
+```
 
 ---
 
@@ -505,76 +878,47 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[AI Analysis Complete] --> B[Condition Detected]
-    B --> C{Scalp Type}
-
-    C -->|Oily| D[Get Oil Control Products]
-    C -->|Dry| E[Get Moisturizing Products]
-    C -->|Dandruff| F[Get Anti-Dandruff Products]
-    C -->|Normal| G[Get Maintenance Products]
-
-    D --> H[Get Stress Videos]
-    E --> H
-    F --> H
-    G --> H
-
-    H --> I[Get Nutrition Articles]
-    I --> J[Get Motivation Content]
-    J --> K[Compile Recommendations]
-    K --> L[Display to User]
-
-    L --> M{User Clicks Product?}
-    M -->|Ya| N[Open Marketplace Link]
-    M -->|Tidak| O[Stay in App]
-
-    L --> P{User Clicks Video?}
-    P -->|Ya| Q[Open YouTube Link]
-    P -->|Tidak| O
-
-    L --> R{User Clicks Article?}
-    R -->|Ya| S[Open Article]
-    R -->|Tidak| O
+    A[AI Analysis Complete] --> B[Severity Detected]
+    B --> C{Severity Level}
+    
+    C -->|Stage 0-2| D[Preventive Treatment]
+    C -->|Stage 3-4| E[Active Treatment]
+    C -->|Stage 5-6| F[Intensive Treatment]
+    C -->|Stage 7| G[Medical Consultation]
+    
+    D --> H[Products: Hair Vitamin]
+    E --> I[Products: Minoxidil + Vitamin]
+    F --> J[Products: Minoxidil 5% + Finasteride]
+    G --> K[Refer to Dermatologist]
+    
+    H --> L[Get Videos]
+    I --> L
+    J --> L
+    K --> L
+    
+    L --> M[Get Nutrition Articles]
+    M --> N[Compile Recommendations]
+    N --> O[Display to User]
 ```
 
 ### 7.2 Kategorisasi Konten
 
 | Trigger | Product Category | Video Category | Article Category |
 |---------|------------------|----------------|------------------|
-| Hair Loss | Minoxidil, Supplements | Treatment tutorials | Hair care tips |
-| Oily Scalp | Oil control shampoo | Scalp care videos | Sebum management |
+| Stage 0-2 | Hair Vitamin | Prevention tips | Hair care routine |
+| Stage 3-4 | Minoxidil + Vitamin | Treatment tutorials | Hair loss causes |
+| Stage 5-6 | Minoxidil 5% + Finasteride | Advanced treatment | Treatment options |
+| Stage 7 | PRP, Transplant | Medical procedures | Surgical options |
+| Oily Scalp | Oil control shampoo | Scalp care | Sebum management |
 | Dry Scalp | Moisturizing products | Hydration tips | Scalp nourishment |
 | High Stress | Relaxation products | Stress management | Mental health |
 | Low Nutrition | Supplements | Diet tips | Nutrition guide |
 
 ---
 
-## 8. Flow Komunitas (Phase 2)
+## 8. Error States
 
-### 8.1 Flow Sharing
-
-```mermaid
-flowchart TD
-    A[User Progress] --> B[Anonymize Data]
-    B --> C{Share to Community?}
-    C -->|Ya| D[Select Progress Data]
-    D --> E[Remove Personal Info]
-    E --> F[Generate Anonymous ID]
-    F --> G[Post to Community]
-    G --> H[Community Feed]
-
-    H --> I[Other Users View]
-    I --> J{React or Comment?}
-    J -->|React| K[Add Reaction]
-    J -->|Comment| L[Add Tip/Comment]
-    K --> M[Update Engagement]
-    L --> M
-```
-
----
-
-## 9. Error States
-
-### 9.1 Error Handling
+### 8.1 Error Handling
 
 | Error Code | Message | Action |
 |------------|---------|--------|
@@ -585,7 +929,7 @@ flowchart TD
 | 500 | Server Error | Tampilkan retry button |
 | NETWORK | Connection Failed | Tampilkan offline mode |
 
-### 9.2 Empty State
+### 8.2 Empty State
 
 | Condition | Message | CTA |
 |-----------|---------|-----|
@@ -594,7 +938,7 @@ flowchart TD
 | No Logs | Belum ada log hari ini | Log Habit |
 | No History | Belum ada history | Start Tracking |
 
-### 9.3 Loading State
+### 8.3 Loading State
 
 | Loading | Progress | Message |
 |---------|----------|---------|
@@ -605,9 +949,9 @@ flowchart TD
 
 ---
 
-## 10. Navigation Structure
+## 9. Navigation Structure
 
-### 10.1 Bottom Navigation
+### 9.1 Bottom Navigation
 
 | Tab | Icon | Label | Description |
 |-----|------|-------|-------------|
@@ -616,7 +960,7 @@ flowchart TD
 | Treatment | Pill | Treatment | Checklist dan jadwal |
 | Profile | User | Profile | Pengaturan akun |
 
-### 10.2 Screen Hierarchy
+### 9.2 Screen Hierarchy
 
 ```mermaid
 graph TD
@@ -625,7 +969,7 @@ graph TD
         A --> C[Register]
         B --> D[Forgot Password]
     end
-
+    
     subgraph Main
         E[Dashboard] --> F[Photo Upload]
         E --> G[Habit Log]
@@ -633,22 +977,25 @@ graph TD
         E --> I[Recommendations]
         E --> K[Profile]
     end
-
+    
     F --> L[Photo Gallery]
     F --> M[Analysis Result]
-
-    G --> N[Habit History]
-    G --> O[Food Picker]
-
-    H --> P[Treatment List]
-    H --> Q[Checklist]
-
-    I --> R[Products]
-    I --> S[Videos]
-    I --> T[Articles]
+    F --> N[Severity Report]
+    
+    G --> O[Habit History]
+    G --> P[Food Picker]
+    G --> Q[Exercise Log]
+    
+    H --> R[Treatment List]
+    H --> S[Checklist]
+    H --> T[Add Treatment]
+    
+    I --> U[Products]
+    I --> V[Videos]
+    I --> W[Articles]
 ```
 
-### 10.3 Header Navigation
+### 9.3 Header Navigation
 
 | Page | Back Button | Actions |
 |------|-------------|---------|
@@ -660,74 +1007,58 @@ graph TD
 
 ---
 
-## 11. Key Success Metrics
+## 10. Key Success Metrics
 
 | Metrik | Target | Pengukuran |
 |--------|--------|-------------|
 | Penyelesaian Hari 1 | 80% | Complete onboarding |
 | Retensi Minggu 1 | 60% | Return after 7 days |
-| Kepatuhan Foto | 70% | Weekly photo uploads |
+| Kepatuhan Foto | 70% | Weekly photo uploads (5 angles) |
 | Kepatuhan Treatment | 70% | Daily completion |
+| Kepatuhan Nutrisi | 60% | Daily food logging |
 | Engagement Insight | 50% | View correlation data |
 | Click Rate Rekomendasi | 30% | Click on products/videos |
-| Nutrition Logging | 60% | Daily food logging |
 
 ---
 
-## 12. Food Database Specification
+## 11. Food Database Specification
 
-### 12.1 Data Source
+### 11.1 Data Source
 
 | Source | Coverage | Update Frequency |
 |--------|----------|-------------------|
 | USDA Food Database | Global | Monthly |
-| Indonesian Food Data | Local | Quarterly |
-| User Submissions | Community | Real-time |
+| Indonesian Food Data | Local Indonesian foods | Quarterly |
+| User Submissions | Community | Real-time (after verification) |
 
-### 12.2 Nutrient Categories
+### 11.2 Nutrient Categories
 
-| Kategori | Nutrisi | Satuan |
-|----------|---------|--------|
-| Macro | Protein | gram |
-| Macro | Karbohidrat | gram |
-| Macro | Lemak | gram |
-| Micro | Zinc | mg |
-| Micro | Iron | mg |
-| Micro | Biotin | mcg |
-| Micro | Vitamin D | IU |
-| Micro | Vitamin B12 | mcg |
-| Micro | Vitamin E | mg |
-| Hydration | Water | ml |
+| Kategori | Nutrisi | Satuan | Daily Value |
+|----------|---------|--------|-------------|
+| Macro | Protein | gram | 50g |
+| Macro | Karbohidrat | gram | 300g |
+| Macro | Lemak | gram | 65g |
+| Macro | Serat | gram | 25g |
+| Micro | Zinc | mg | 11mg |
+| Micro | Iron | mg | 18mg |
+| Vitamin | Biotin | mcg | 30mcg |
+| Vitamin | Vitamin D | IU | 600IU |
+| Vitamin | Vitamin B12 | mcg | 2.4mcg |
+| Vitamin | Vitamin E | mg | 15mg |
+| Mineral | Selenium | mcg | 55mcg |
+| Mineral | Magnesium | mg | 400mg |
 
-### 12.3 Portion Sizes
+### 11.3 Portion Sizes
 
 | Makanan | Porsi Standar | Gram |
 |---------|---------------|------|
 | Tempe | 1 potong | 100g |
+| Tahu | 1 potong | 100g |
 | Bayam | 1 mangkuk | 180g |
 | Telur | 1 butir | 50g |
 | Nasi | 1 centong | 150g |
 | Ayam | 1 potong | 100g |
 | Ikan | 1 potong | 100g |
-
----
-
-## 13. Future Enhancements
-
-### 13.1 Phase 2 Features
-
-| Feature | Description | Priority |
-|---------|-------------|----------|
-| Community Sharing | Share progress anonymously | High |
-| Nutrition AI | Smart food recognition from photo | Medium |
-| Wearable Integration | Sync with fitness trackers | Medium |
-| Teleconsultation | Chat with dermatologist | Low |
-
-### 13.2 Phase 3 Features
-
-| Feature | Description | Priority |
-|---------|-------------|----------|
-| Genetic Test Integration | Import DNA test results | High |
-| Marketplace | Buy recommended products | Medium |
-| Gamification | Points and achievements | Medium |
-| Family Profiles | Multiple user profiles | Low |
+| Daging | 1 potong | 100g |
+| Buah | 1 buah | variabel |
+| Sayur | 1 mangkuk | 100-200g |

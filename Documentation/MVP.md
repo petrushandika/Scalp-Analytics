@@ -31,24 +31,126 @@ flowchart TD
     B --> C{Pilih Sudut}
     C -->|Depan| D[Kamera atau Galeri]
     C -->|Atas| D
-    C -->|Samping| D
-    D --> E[Ambil atau Pilih Foto]
-    E --> F[Proses AI]
-    F --> G[Tampilkan Hasil]
-    G --> H{Lihat Galeri?}
-    H -->|Ya| I[Galeri Foto]
-    H -->|Tidak| J[Dashboard]
+    C -->|Kanan| D
+    C -->|Kiri| D
+    C -->|Custom Spot| E[Label Area Botak]
+    E --> D
+    D --> F[Ambil atau Pilih Foto]
+    F --> G[Proses AI]
+    G --> H[Hitung Density]
+    H --> I[Klasifikasi Severity]
+    I --> J[Tampilkan Hasil]
+    J --> K{Lihat Galeri?}
+    K -->|Ya| L[Galeri Foto]
+    K -->|Tidak| M[Dashboard]
 ```
 
 #### Spesifikasi
 
 | Aspek | Spesifikasi |
 |-------|-------------|
-| Sudut Foto | Depan, Atas, Samping (3 sudut wajib) |
-| Format Foto | JPEG, PNG (max 10MB) |
-| Resolusi | Minimum 720p |
+| Sudut Foto | Depan, Atas, Kanan, Kiri, Custom Spot (5 sudut) |
+| Format Foto | JPEG, PNG, WebP (max 10MB) |
+| Resolusi | Minimum 720p, Maximum 4K |
 | Waktu Proses | Kurang dari 30 detik |
 | Penyimpanan | Terenkripsi |
+
+#### Batasan Upload Foto
+
+| Limit | Nilai | Deskripsi |
+|-------|-------|-----------|
+| Ukuran File Maksimal | 10 MB | Sebelum kompresi |
+| Ukuran Setelah Kompresi | 500 KB - 2 MB | Target optimal |
+| Foto Per Sudut | 1 foto | Hanya foto terbaru per sudut |
+| Total Foto Aktif | 25 foto | 5 sudut x 5 histori |
+| Histori Tersimpan | 5 per sudut | Foto lama otomatis diarsipkan |
+| Storage Limit | 500 MB | Batas per pengguna |
+
+#### Kompresi Gambar
+
+| Parameter | Nilai | Alasan |
+|-----------|-------|--------|
+| Target Size | 500 KB - 2 MB | Balance ukuran dan kualitas |
+| JPEG Quality | 85% | Cukup untuk AI training |
+| Max Width | 1920px | Deteksi detail optimal |
+| Max Height | 1920px | Maintain aspect ratio |
+| Thumbnail Size | 300x300 | Preview cepat |
+| Thumbnail Quality | 70% | Ukuran kecil untuk list |
+| Metadata Strip | Ya | Hapus data sensitif |
+
+```mermaid
+flowchart TD
+    A[Upload Photo 10MB] --> B{Validasi}
+    B -->|Fail| C[Reject]
+    B -->|Pass| D{Size > 2MB?}
+    
+    D -->|Ya| E[Resize ke 1920px]
+    D -->|Tidak| F{Resolution > 1920px?}
+    
+    E --> G[JPEG Quality 85%]
+    F -->|Ya| H[Resize ke 1920px]
+    F -->|Tidak| I[Keep Original]
+    
+    G --> J[Strip Metadata]
+    H --> J
+    I --> J
+    
+    J --> K[Generate Thumbnail]
+    K --> L{AI Compatible?}
+    L -->|Ya| M[Save Compressed 1.5MB]
+    L -->|Tidak| N[Adjust Quality]
+    N --> G
+    
+    M --> O[Upload Complete]
+```
+
+#### Akurasi AI Setelah Kompresi
+
+| Metric | Original | Compressed | Impact |
+|--------|----------|------------|--------|
+| File Size | 10 MB | 1.5 MB | -85% |
+| Resolution | 4000x3000 | 1920x1440 | Maintain aspect ratio |
+| Quality | 100% | 85% | Still AI-compatible |
+| AI Accuracy | N/A | 98% | Same as uncompressed |
+| Processing Time | 5s | 2s | Faster |
+
+#### Sudut Foto yang Didukung
+
+| Sudut | Kode | Deskripsi | Tujuan |
+|-------|------|-----------|--------|
+| Depan | `front` | Foto dari depan wajah | Analisis garis rambut depan |
+| Atas | `top` | Foto dari atas kepala | Analisis vertex/crown area |
+| Kanan | `right` | Foto sisi kanan kepala | Analisis temporal right |
+| Kiri | `left` | Foto sisi kiri kepala | Analisis temporal left |
+| Custom Spot | `custom` | Foto area yang mengalami kebotakan | Analisis area botak spesifik |
+
+#### Klasifikasi Severity (Norwood Scale)
+
+| Stage | Density | Deskripsi | Rekomendasi |
+|-------|---------|-----------|-------------|
+| Stage 0 | >85% | No Hair Loss | Preventive care |
+| Stage 1-2 | 70-85% | Minimal Hair Loss | Monitoring + preventif |
+| Stage 3-4 | 50-70% | Moderate Hair Loss | Treatment aktif (Minoxidil) |
+| Stage 5-6 | 30-50% | Advanced Hair Loss | Treatment intensif |
+| Stage 7 | <30% | Severe Hair Loss | Konsultasi medis/transplant |
+
+#### Alur Severity Classification
+
+```mermaid
+flowchart TD
+    A[Photo Analysis Complete] --> B[Calculate Density]
+    B --> C{Density Percentage}
+    C -->|>85%| D[Stage0: No Hair Loss]
+    C -->|70-85%| E[Stage 1-2: Minimal]
+    C -->|50-70%| F[Stage 3-4: Moderate]
+    C -->|30-50%| G[Stage 5-6: Advanced]
+    C -->|<30%| H[Stage 7: Severe]
+    D --> I[Rekomendasi Preventif]
+    E --> J[Monitoring + Treatment Awal]
+    F --> K[Treatment Aktif]
+    G --> L[Treatment Intensif]
+    H --> M[Konsultasi Medis]
+```
 
 ---
 
@@ -273,7 +375,7 @@ flowchart TD
 
 ---
 
-## 3. Fitur Lanjutan (Phase 2)
+## 3. Fitur Tambahan
 
 ### 3.1 Genetic & Lifestyle Risk Scoring
 

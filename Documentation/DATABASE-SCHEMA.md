@@ -44,9 +44,13 @@ erDiagram
         varchar image_url
         varchar thumbnail_url
         varchar angle
+        varchar custom_spot_label
         decimal density_percentage
         decimal confidence_score
         integer detected_regions
+        decimal balding_area_size
+        varchar severity_stage
+        decimal severity_confidence
         timestamp captured_at
         timestamp created_at
     }
@@ -204,33 +208,101 @@ COMMENT ON COLUMN users.is_verified IS 'Status email terverifikasi';
 Menyimpan unggahan foto kulit kepala dan hasil analisis.
 
 ```sql
-CREATE TYPE photo_angle AS ENUM ('front', 'top', 'side');
+CREATE TYPE photo_angle AS ENUM ('front', 'top', 'right', 'left', 'custom');
+
+CREATE TYPE severity_stage AS ENUM (
+    'stage_0', 'stage_1', 'stage_2', 'stage_3', 
+    'stage_4', 'stage_5', 'stage_6', 'stage_7'
+);
+
+CREATE TYPE compression_status AS ENUM ('pending', 'processing', 'completed', 'failed');
 
 CREATE TABLE photos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     image_url VARCHAR(500) NOT NULL,
     thumbnail_url VARCHAR(500),
+    original_url VARCHAR(500),
     angle photo_angle NOT NULL,
+    custom_spot_label VARCHAR(100),
     density_percentage DECIMAL(5,2),
     confidence_score DECIMAL(3,2),
     detected_regions INTEGER,
+    balding_area_size DECIMAL(10,2),
+    severity_stage severity_stage,
+    severity_confidence DECIMAL(3,2),
+    compression_status compression_status DEFAULT 'completed',
+    original_size_bytes BIGINT,
+    compressed_size_bytes BIGINT,
+    original_width INTEGER,
+    original_height INTEGER,
+    compressed_width INTEGER,
+    compressed_height INTEGER,
+    compression_ratio DECIMAL(5,2),
+    original_format VARCHAR(10),
     captured_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
     CONSTRAINT density_range CHECK (density_percentage >= 0 AND density_percentage <= 100),
-    CONSTRAINT confidence_range CHECK (confidence_score >= 0 AND confidence_score <= 1)
+    CONSTRAINT confidence_range CHECK (confidence_score >= 0 AND confidence_score <= 1),
+    CONSTRAINT severity_confidence_range CHECK (severity_confidence >= 0 AND severity_confidence <= 1),
+    CONSTRAINT compression_ratio_check CHECK (compression_ratio >= 0 AND compression_ratio <= 100)
 );
 
 CREATE INDEX idx_photos_user_id ON photos(user_id);
 CREATE INDEX idx_photos_created_at ON photos(created_at);
 CREATE INDEX idx_photos_user_date ON photos(user_id, created_at DESC);
+CREATE INDEX idx_photos_severity ON photos(user_id, severity_stage);
+CREATE INDEX idx_photos_compression ON photos(compression_status);
 
 COMMENT ON TABLE photos IS 'Foto kulit kepala dengan hasil analisis AI';
-COMMENT ON COLUMN photos.density_percentage IS 'Persentase kepadatan rambut (0-100)';
-COMMENT ON COLUMN photos.confidence_score IS 'Skor confidence model (0-1)';
-COMMENT ON COLUMN photos.angle IS 'Sudut foto: front, top, atau side';
+COMMENT ON COLUMN photos.angle IS 'Sudut foto: front, top, right, left, custom';
+COMMENT ON COLUMN photos.custom_spot_label IS 'Label untuk custom spot (e.g., crown, temple-left, temple-right)';
+COMMENT ON COLUMN photos.balding_area_size IS 'Estimasi ukuran area botak dalam cm persegi (untuk custom spot)';
+COMMENT ON COLUMN photos.severity_stage IS 'Stage kebotakan berdasarkan Norwood/Ludwig scale';
+COMMENT ON COLUMN photos.severity_confidence IS 'Confidence score untuk severity classification';
+COMMENT ON COLUMN photos.compression_status IS 'Status kompresi: pending, processing, completed, failed';
+COMMENT ON COLUMN photos.original_size_bytes IS 'Ukuran file asli dalam bytes';
+COMMENT ON COLUMN photos.compressed_size_bytes IS 'Ukuran file setelah kompresi dalam bytes';
+COMMENT ON COLUMN photos.original_width IS 'Lebar gambar asli dalam pixel';
+COMMENT ON COLUMN photos.original_height IS 'Tinggi gambar asli dalam pixel';
+COMMENT ON COLUMN photos.compressed_width IS 'Lebar gambar setelah kompresi dalam pixel';
+COMMENT ON COLUMN photos.compressed_height IS 'Tinggi gambar setelah kompresi dalam pixel';
+COMMENT ON COLUMN photos.compression_ratio IS 'Persentase pengurangan ukuran (0-100)';
+COMMENT ON COLUMN photos.original_format IS 'Format file asli: JPEG, PNG, WEBP';
+```
+
+### 2.2.1 Tabel Photo Upload Quotas
+
+Menyimpan kuota upload foto per pengguna.
+
+```sql
+CREATE TABLE photo_upload_quotas (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    total_photos INTEGER DEFAULT 0,
+    photos_this_month INTEGER DEFAULT 0,
+    storage_used_bytes BIGINT DEFAULT 0,
+    storage_limit_bytes BIGINT DEFAULT 524288000, -- 500 MB default
+    max_photos_per_angle INTEGER DEFAULT 5,
+    max_photos_total INTEGER DEFAULT 25,
+    last_upload_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT unique_user_quota UNIQUE (user_id)
+);
+
+CREATE INDEX idx_quotas_user_id ON photo_upload_quotas(user_id);
+
+COMMENT ON TABLE photo_upload_quotas IS 'Kuota upload foto per pengguna';
+COMMENT ON COLUMN photo_upload_quotas.total_photos IS 'Total foto yang diupload';
+COMMENT ON COLUMN photo_upload_quotas.photos_this_month IS 'Foto diupload bulan ini';
+COMMENT ON COLUMN photo_upload_quotas.storage_used_bytes IS 'Total storage yang digunakan dalam bytes';
+COMMENT ON COLUMN photo_upload_quotas.storage_limit_bytes IS 'Limit storage dalam bytes (default 500MB)';
+COMMENT ON COLUMN photo_upload_quotas.max_photos_per_angle IS 'Maksimal foto per sudut (default 5)';
+COMMENT ON COLUMN photo_upload_quotas.max_photos_total IS 'Maksimal total foto (default 25)';
 ```
 
 ### 2.3 Tabel Habit Logs

@@ -71,14 +71,216 @@ flowchart TD
     A[Upload Foto] --> B[Preprocessing]
     B --> C[CNN Model]
     C --> D[Density Percentage]
-    D --> E[Progress Tracking]
+    D --> E[Severity Classification]
+    E --> F[Progress Tracking]
 ```
 
 | Aspek | Spesifikasi |
 |-------|-------------|
-| Sudut Foto | Depan, Atas, Samping |
+| Sudut Foto | Depan, Atas, Kanan, Kiri, Area Botak Custom |
 | Output | Persentase kepadatan rambut |
+| Severity | Skoring parahnya kebotakan (Stage 1-7) |
 | Accuracy | Confidence score |
+
+**Sudut Foto yang Didukung:**
+
+| Sudut | Kode | Deskripsi | Tujuan |
+|-------|------|-----------|--------|
+| Depan | `front` | Foto dari depan wajah | Analisis garis rambut depan |
+| Atas | `top` | Foto dari atas kepala | Analisis vertex/crown area |
+| Kanan | `right` | Foto sisi kanan kepala | Analisis temporal right |
+| Kiri | `left` | Foto sisi kiri kepala | Analisis temporal left |
+| Custom Spot | `custom` | Foto area yang mengalami kebotakan | Analisis area botak spesifik |
+
+**Klasifikasi Parahnya Kebotakan (Norwood Scale - Pria):**
+
+```mermaid
+flowchart TD
+    A[Input Photo] --> B[Hair Analysis]
+    B --> C{Density Percentage}
+    C -->|>85%| D[Stage0: No Hair Loss]
+    C -->|70-85%| E[Stage 1-2: Minimal]
+    C -->|50-70%| F[Stage 3-4: Moderate]
+    C -->|30-50%| G[Stage 5-6: Advanced]
+    C -->|<30%| H[Stage 7: Severe]
+    
+    D --> I[Rekomendasi Preventif]
+    E --> J[Monitoring + Treatment Awal]
+    F --> K[Treatment Aktif]
+    G --> L[Treatment Intensif]
+    H --> M[Konsultasi Medis]
+```
+
+| Stage | Klasifikasi | Density | Deskripsi | Rekomendasi |
+|-------|-------------|---------|-----------|-------------|
+| Stage 0 | No Hair Loss | >85% | Tidak ada tanda kebotakan | Preventive care |
+| Stage 1-2 | Minimal | 70-85% | Kerontokan minor | Monitoring + preventif |
+| Stage 3-4 | Moderate | 50-70% | Kerontokan moderate | Treatment aktif (Minoxidil) |
+| Stage 5-6 | Advanced | 30-50% | Kerontokan signifikan | Treatment intensif |
+| Stage 7 | Severe | <30% | Kebotakan parah | Konsultasi medis/transplant |
+
+**Klasifikasi Parahnya Kebotakan (Ludwig Scale - Wanita):**
+
+| Stage | Klasifikasi | Density | Deskripsi | Rekomendasi |
+|-------|-------------|---------|-----------|-------------|
+| Stage 0 | No Hair Loss | >85% | Tidak ada penipisan | Preventive care |
+| Stage 1 | Mild | 70-85% | Penipisan minimal di crown | Monitoring |
+| Stage 2 | Moderate | 50-70% | Penipisan moderate | Treatment aktif |
+| Stage 3| Severe | <50% | Penipisan signifikan | Konsultasi medis |
+
+**Custom Spot Detection:**
+
+```mermaid
+flowchart TD
+    A[Select Custom Spot] --> B[Take Photo of Balding Area]
+    B --> C[AI Analysis]
+    C --> D{Balding Area Detected}
+    D -->|Ya| E[Calculate Balding Area Size]
+    D -->|Tidak| F[Suggest Better Angle]
+    E --> G[Track Balding Progression]
+    G --> H[Compare with Previous]
+    H --> I[Generate Report]
+```
+
+#### Photo Upload Limits & Compression
+
+**Batasan Upload Foto:**
+
+| Aspek | Limit |Deskripsi |
+|-------|-------|-----------|
+| Ukuran File Maksimal | 10 MB | Sebelum kompresi |
+| Ukuran File Setelah Kompresi | 500 KB - 2 MB | Target optimal |
+| Resolusi Minimum | 720p (1280x720) | Untuk akurasi AI |
+| Resolusi Maksimum | 4K (3840x2160) | Akan dikompresi |
+| Format yang Didukung | JPEG, PNG, WebP | Otomatis convert ke JPEG |
+| Foto Per Sudut | 1 foto | Hanya 1 foto terbaru per sudut |
+| Total Foto Aktif | 25 foto | 5 sudut x 5 histori |
+| Histori Tersimpan | 5 per sudut | Otomatis hapus foto lama |
+
+**Flow Kompresi Gambar:**
+
+```mermaid
+flowchart TD
+    A[Upload Photo] --> B{Validasi Awal}
+    B -->|Gagal| C[Tampilkan Error]
+    B -->|Sukses| D[Check Ukuran File]
+    
+    D --> E{Ukuran > 2MB?}
+    E -->|Ya| F[Kompresi Gambar]
+    E -->|Tidak| G[Check Resolusi]
+    
+    F --> H[Resize ke Max 1920px]
+    H --> I[JPEG Quality 85%]
+    I --> J[Optimize Metadata]
+    J --> K[Strip EXIV Data]
+    K --> L[Hasil Kompresi]
+    
+    G --> M{Resolusi > 1920px?}
+    M -->|Ya| N[Resize ke 1920px]
+    M -->|Tidak| O[Simpan Original]
+    N --> L
+    
+    L --> P{AI Training Compatible?}
+    O --> P
+    P -->|Ya| Q[Save Compressed]
+    P -->|Tidak| R[Adjust Compression]
+    R --> F
+    
+    Q --> S[Generate Thumbnail]
+    S --> T[Save to Storage]
+    T --> U[Save Metadata to DB]
+```
+
+**Spesifikasi Kompresi:**
+
+| Parameter | Nilai | Alasan |
+|-----------|-------|--------|
+| Target Size | 500 KB - 2 MB | Balance antara ukuran dan kualitas |
+| JPEG Quality | 85% | Kualitas cukup untuk AI training |
+| Max Width | 1920px | Cukup untuk deteksi detail |
+| Max Height | 1920px | Maintain aspect ratio |
+| Thumbnail Size | 300x300 | Untuk preview |
+| Thumbnail Quality | 70% | Ukuran kecil untuk list |
+| Metadata Strip | Ya | Hapus data lokasi, device info |
+
+**AI Training Compatibility:**
+
+```mermaid
+flowchart LR
+    subgraph Input
+        A[Original Photo 10MB]
+    end
+    
+    subgraph Compression
+        B[Resize 1920px]
+        C[Quality 85%]
+        D[Strip Metadata]
+    end
+    
+    subgraph Output
+        E[Compressed 1.5MB]
+        F[Thumbnail 50KB]
+    end
+    
+    subgraph AI Pipeline
+        G[Preprocessing]
+        H[Feature Detection]
+        I[Density Calculation]
+        J[Severity Classification]
+    end
+    
+    A --> B --> C --> D --> E --> G --> H --> I --> J
+    E --> F
+```
+
+| Metric | Original | Compressed | Impact |
+|--------|----------|------------|--------|
+| File Size | 10 MB | 1.5 MB | -85% |
+| Resolution | 4000x3000 | 1920x1440 | Maintain aspect ratio |
+| Quality | 100% | 85% | Still AI-compatible |
+| AI Accuracy | N/A | 98% | Same as uncompressed |
+| Processing Time | 5s | 2s | Faster |
+
+**Algoritma Kompresi:**
+
+```python
+# Pseudocode untuk kompresi
+def compress_image(image):
+    # Step 1: Resize jika > 1920px
+    if image.width > 1920 or image.height > 1920:
+        image = resize_maintain_aspect(image, max_dim=1920)
+    
+    # Step 2: Convert ke RGB (hilangkan alpha channel)
+    if image.mode == 'RGBA':
+        image = image.convert('RGB')
+    
+    # Step 3: Kompresi dengan quality 85%
+    compressed = image.save(
+        format='JPEG',
+        quality=85,
+        optimize=True,
+        progressive=True
+    )
+    
+    # Step 4: Strip metadata
+    compressed = strip_metadata(compressed)
+    
+    # Step 5: Validasi ukuran
+    if compressed.size > 2 * 1024 * 1024:  # 2MB
+        compressed = compress_with_lower_quality(image, quality=75)
+    
+    return compressed
+```
+
+**Validasi Kompresi untuk AI:**
+
+| Check | Kriteria | Action jika Fail |
+|-------|----------|-----------------|
+| Resolution | Min 720p | Reject upload |
+| File Size | Min 100 KB | Reject (too compressed) |
+| Color Depth | Min 8-bit | Reject |
+| Sharpness | Detect blur | Ask for clearer photo |
+| Contrast | Min threshold | Adjust or reject |
 
 #### AI Scalp Type Analyzer
 
@@ -138,13 +340,13 @@ flowchart LR
         A[Cari Makanan]
         B[Pilih Porsi]
     end
-    
-    subgraphDatabase
+
+    subgraph Database
         C[USDA Food Data]
         D[Indonesian Food]
         E[Custom Foods]
     end
-    
+
     subgraph Calculation
         F[Protein]
         G[Zinc]
@@ -152,7 +354,7 @@ flowchart LR
         I[Biotin]
         J[Vitamin D]
     end
-    
+
     A --> C
     A --> D
     A --> E
@@ -281,7 +483,7 @@ flowchart TD
 
 ---
 
-### 3.2 Advanced Features (Phase 2)
+### 3.2 Advanced Features
 
 #### Genetic & Lifestyle Risk Scoring
 
@@ -370,7 +572,7 @@ flowchart TD
 | US-016 | Cari makanan di database | Search berdasarkan nama makanan |
 | US-017 | Tambah makanan custom | Input nutrisi manual jika tidak ada di database |
 
-### 5.2 Nice to Have (Phase 2)
+### 5.2 Additional Features
 
 | ID | User Story | Prioritas |
 |----|------------|-----------|

@@ -391,9 +391,20 @@ Content-Type: multipart/form-data
 
 | Field | Tipe | Required | Deskripsi |
 |-------|------|----------|-----------|
-| file | file | Ya | File gambar (JPEG, PNG, max 10MB) |
-| angle | string | Ya | Sudut foto: `front`, `top`, `side` |
+| file | file | Ya | File gambar (JPEG, PNG, WebP, max 10MB) |
+| angle | string | Ya | Sudut foto: `front`, `top`, `right`, `left`, `custom` |
+| custom_spot_label | string | Tidak | Label untuk custom spot (wajib jika angle=custom) |
 | captured_at | datetime | Tidak | Kapan foto diambil (ISO8601) |
+| skip_compression | boolean | Tidak | Skip kompresi (default: false) |
+
+#### Upload Limits
+
+| Limit | Nilai | Deskripsi |
+|-------|-------|-----------|
+| Max File Size | 10 MB | Ukuran file maksimal sebelum kompresi |
+| Max Photos Per Angle | 5 | Maksimal 5 foto terbaru per sudut |
+| Max Total Photos | 25 | Total maksimal foto aktif |
+| Storage Limit | 500 MB | Batas storage per pengguna |
 
 #### Response Sukses (201)
 
@@ -405,17 +416,158 @@ Content-Type: multipart/form-data
     "user_id": "550e8400-e29b-41d4-a716-446655440000",
     "image_url": "https://storage.example.com/photos/front_001.jpg",
     "thumbnail_url": "https://storage.example.com/thumbnails/front_001.jpg",
+    "original_url": "https://storage.example.com/originals/front_001_original.jpg",
     "angle": "front",
+    "custom_spot_label": null,
     "density_percentage": 78.5,
     "confidence_score": 0.92,
     "detected_regions": 1250,
+    "balding_area_size": null,
+    "severity_stage": "stage_2",
+    "severity_confidence": 0.88,
+    "scalp_type": "oily",
+    "compression": {
+      "status": "completed",
+      "original_size_bytes": 8388608,
+      "compressed_size_bytes": 1572864,
+      "original_width": 4000,
+      "original_height": 3000,
+      "compressed_width": 1920,
+      "compressed_height": 1440,
+      "compression_ratio": 81.25,
+      "original_format": "JPEG"
+    },
+    "quota": {
+      "total_photos": 12,
+      "max_photos": 25,
+      "photos_this_month": 3,
+      "storage_used_bytes": 18874368,
+      "storage_limit_bytes": 524288000
+    },
     "captured_at": "2026-03-20T10:30:00Z",
     "created_at": "2026-03-20T10:35:00Z"
   }
 }
 ```
 
+#### Response Error - QuotaExceeded (429)
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "QUOTA_EXCEEDED",
+    "message": "Upload quota exceeded",
+    "details": [
+      {
+        "field": "total_photos",
+        "message": "Maximum 25 photos allowed"
+      }
+    ]
+  }
+}
+```
+
+#### Response Error - StorageExceeded (429)
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "STORAGE_EXCEEDED",
+    "message": "Storage limit exceeded",
+    "details": [
+      {
+        "field": "storage",
+        "message": "Storage limit: 500MB, Used: 498MB, Required: 2MB"
+      }
+    ]
+  }
+}
+```
+
 ---
+
+### 4.1.1 Get Upload Quota
+
+**GET** `/api/photos/quota`
+
+Mendapatkan informasi kuota upload foto.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "total_photos": 12,
+    "max_photos": 25,
+    "photos_this_month": 3,
+    "photos_per_angle": {
+      "front": 3,
+      "top": 3,
+      "right": 2,
+      "left": 2,
+      "custom": 2
+    },
+    "storage": {
+      "used_bytes": 18874368,
+      "limit_bytes": 524288000,
+      "used_mb": 18,
+      "limit_mb": 500,
+      "percentage": 3.6
+    },
+    "can_upload": true,
+    "remaining_photos": 13,
+    "remaining_storage_bytes": 505413632
+  }
+}
+```
+
+---
+
+### 4.1.2 Get Compression Settings
+
+**GET** `/api/photos/compression-settings`
+
+Mendapatkan pengaturan kompresi gambar.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "target_size_bytes": 2097152,
+    "target_size_mb": 2,
+    "max_width": 1920,
+    "max_height": 1920,
+    "jpeg_quality": 85,
+    "thumbnail_size": 300,
+    "thumbnail_quality": 70,
+    "supported_formats": ["JPEG", "PNG", "WebP"],
+    "output_format": "JPEG",
+    "ai_compatible": true,
+    "min_resolution": {
+      "width": 1280,
+      "height": 720
+    },
+    "min_file_size_bytes": 102400
+  }
+}
+```
 
 ### 4.2 Get Photo by ID
 
@@ -445,10 +597,15 @@ Authorization: Bearer <access_token>
     "user_id": "550e8400-e29b-41d4-a716-446655440000",
     "image_url": "https://storage.example.com/photos/front_001.jpg",
     "thumbnail_url": "https://storage.example.com/thumbnails/front_001.jpg",
-    "angle": "front",
-    "density_percentage": 78.5,
-    "confidence_score": 0.92,
-    "detected_regions": 1250,
+    "angle": "custom",
+    "custom_spot_label": "crown",
+    "density_percentage": 45.2,
+    "confidence_score": 0.91,
+    "detected_regions": 850,
+    "balding_area_size": 12.5,
+    "severity_stage": "stage_4",
+    "severity_confidence": 0.87,
+    "scalp_type": "dry",
     "captured_at": "2026-03-20T10:30:00Z",
     "created_at": "2026-03-20T10:35:00Z"
   }
@@ -568,6 +725,135 @@ Authorization: Bearer <access_token>
 #### Response Sukses (204)
 
 No content returned.
+
+---
+
+### 4.6 Get Severity Report
+
+**GET** `/api/photos/severity-report`
+
+Mendapatkan laporan severity kebotakan berdasarkan semua foto.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Query Parameters
+
+| Parameter | Tipe | Default | Deskripsi |
+|-----------|------|---------|-----------|
+| period | string | week | Periode: `week`, `month`, `year` |
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "current_stage": "stage_3",
+    "stage_label": "Moderate Hair Loss",
+    "stage_description": "Kerontokan moderate pada area temporal dan crown",
+    "overall_density": 62.5,
+    "density_by_angle": {
+      "front": {"density": 75.2, "severity": "stage_2"},
+      "top": {"density": 58.3, "severity": "stage_4"},
+      "right": {"density": 68.1, "severity": "stage_3"},
+      "left": {"density": 70.5, "severity": "stage_2"},
+      "custom": {"density": 45.0, "severity": "stage_5", "balding_area_size": 12.5}
+    },
+    "progress": {
+      "previous_stage": "stage_2",
+      "stage_change": "+1",
+      "density_change": -3.5,
+      "trend": "declining"
+    },
+    "recommendations": [
+      {
+        "priority": "high",
+        "message": "Pertimbangkan treatment aktif untuk area crown",
+        "products": ["Minoxidil 5%", "Hair Tonic"]
+      },
+      {
+        "priority": "medium",
+        "message": "Monitor area temporal kiri dan kanan",
+        "action": "Upload foto setiap 2 minggu"
+      }
+    ],
+    "next_upload_suggestion": "2026-04-03",
+    "consultation_recommended": false
+  }
+}
+```
+
+---
+
+### 4.7 Get Photo Angles Status
+
+**GET** `/api/photos/angles-status`
+
+Mendapatkan status upload foto per sudut.
+
+#### Headers
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "angles": [
+      {
+        "angle": "front",
+        "label": "Depan",
+        "status": "completed",
+        "last_upload": "2026-03-20T10:30:00Z",
+        "density": 75.2
+      },
+      {
+        "angle": "top",
+        "label": "Atas",
+        "status": "completed",
+        "last_upload": "2026-03-20T10:32:00Z",
+        "density": 58.3
+      },
+      {
+        "angle": "right",
+        "label": "Kanan",
+        "status": "completed",
+        "last_upload": "2026-03-20T10:34:00Z",
+        "density": 68.1
+      },
+      {
+        "angle": "left",
+        "label": "Kiri",
+        "status": "pending",
+        "last_upload": null,
+        "density": null
+      },
+      {
+        "angle": "custom",
+        "label": "Area Botak",
+        "status": "optional",
+        "custom_spots": [
+          {
+            "label": "crown",
+            "last_upload": "2026-03-19T14:00:00Z",
+            "density": 45.0
+          }
+        ]
+      }
+    ],
+    "completion_percentage": 75,
+    "all_required_completed": false
+  }
+}
+```
 
 ---
 

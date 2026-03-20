@@ -484,6 +484,236 @@ class HairDensityModel:
 
 ---
 
+## 4.5 Image Compression Service
+
+### 4.5.1 Compression Pipeline
+
+```mermaid
+flowchart TD
+    subgraph "Input Validation"
+        A[Image Upload] --> B{File Size Check}
+        B -->|> 10MB| C[Reject: File Too Large]
+        B -->|OK| D{Resolution Check}
+        D -->|< 720p| E[Reject: Resolution Too Low]
+        D -->|OK| F{Format Check}
+        F -->|Invalid| G[Reject: Invalid Format]
+        F -->|Valid| H[Proceed to Compression]
+    end
+    
+    subgraph "Compression"
+        H --> I{Size > 2MB?}
+        I -->|Ya| J[Resize to Max 1920px]
+        I -->|Tidak| K{Resolution > 1920px?}
+        J --> L[JPEG Quality 85%]
+        K -->|Ya| M[Resize to 1920px]
+        K -->|Tidak| N[Keep Size]
+        M --> L
+        N --> L
+        L --> O[Strip EXIF Metadata]
+        O --> P[Optimize]
+        P --> Q{Result Size Check}
+        Q -->|> 2MB| R[Reduce Quality to 75%]
+        Q -->|OK| S[Generate Thumbnail]
+        R --> S
+        S --> T[Save Compressed]
+    end
+    
+    subgraph "Quality Assurance"
+        T --> U{AI Quality Check}
+        U -->|Pass| V[Return Success]
+        U -->|Fail| W[Log Warning]
+        W --> V
+    end
+```
+
+### 4.5.2 Compression Service Implementation
+
+```python
+# app/infrastructure/services/image_compression_service.py
+from PIL import Image
+from io import BytesIO
+from typing import Tuple, Optional
+import piexif
+
+class ImageCompressionService:
+    """
+    Service untuk kompresi gambar dengan mempertahankan kualitas AI.
+    """
+    
+    MAX_SIZE = 10 * 1024 * 1024  # 10 MB
+    TARGET_SIZE = 2 * 1024 * 1024  # 2 MB
+    MAX_DIMENSION = 1920
+    JPEG_QUALITY = 85
+    THUMBNAIL_SIZE = 300
+    THUMBNAIL_QUALITY = 70
+    MIN_DIMENSION = 720
+    
+    async def compress(
+        self, 
+        image_data: bytes, 
+        skip_compression: bool = False
+    ) -> Tuple[bytes, bytes, dict]:
+        """
+        Kompresi gambar untuk storage optimization.
+        
+        Returns:
+            Tuple[compressed_image, thumbnail, metadata]
+        """
+        # Load image
+        image = Image.open(BytesIO(image_data))
+        original_format = image.format
+        original_size = len(image_data)
+        original_width, original_height = image.size
+        
+        # Validate minimum resolution
+        if original_width < self.MIN_DIMENSION or original_height < self.MIN_DIMENSION:
+            raise ValueError(f"Resolution too low. Minimum: {self.MIN_DIMENSION}px")
+        
+        # Convert to RGB if necessary
+        if image.mode in ('RGBA', 'P'):
+            image = image.convert('RGB')
+        
+        # Resize if needed
+        if original_width > self.MAX_DIMENSION or original_height > self.MAX_DIMENSION:
+            image = self._resize_maintain_aspect(image, self.MAX_DIMENSION)
+        
+        # Compress to JPEG
+        compressed_buffer = BytesIO()
+        image.save(
+            compressed_buffer, 
+            format='JPEG', 
+            quality=self.JPEG_QUALITY,
+            optimize=True,
+            progressive=True
+        )
+        
+        # Check size and reduce quality if needed
+        if compressed_buffer.tell() > self.TARGET_SIZE:
+            compressed_buffer = BytesIO()
+            image.save(
+                compressed_buffer, 
+                format='JPEG', 
+                quality=75,
+                optimize=True
+            )
+        
+        compressed_size = compressed_buffer.tell()
+        
+        # Generate thumbnail
+        thumbnail = self._generate_thumbnail(image)
+        
+        # Calculate compression ratio
+        compression_ratio = (1 - compressed_size / original_size) * 100
+        
+        # Prepare metadata
+        metadata = {
+            'original_size_bytes': original_size,
+            'compressed_size_bytes': compressed_size,
+            'original_width': original_width,
+            'original_height': original_height,
+            'compressed_width': image.width,
+            'compressed_height': image.height,
+            'compression_ratio': round(compression_ratio, 2),
+            'original_format': original_format
+        }
+        
+        return compressed_buffer.getvalue(), thumbnail, metadata
+    
+    def _resize_maintain_aspect(
+        self, 
+        image: Image, 
+        max_dimension: int
+    ) -> Image:
+        """Resize maintaining aspect ratio."""
+        width, height = image.size
+        if width > height:
+            new_width = max_dimension
+            new_height = int(height * max_dimension / width)
+        else:
+            new_height = max_dimension
+            new_width = int(width * max_dimension / height)
+        return image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    
+    def _generate_thumbnail(self, image: Image) -> bytes:
+        """Generate thumbnail for preview."""
+        thumbnail = image.copy()
+        thumbnail.thumbnail((self.THUMBNAIL_SIZE, self.THUMBNAIL_SIZE))
+        buffer = BytesIO()
+        thumbnail.save(buffer, format='JPEG', quality=self.THUMBNAIL_QUALITY)
+        return buffer.getvalue()
+```
+
+### 4.5.3 Storage Architecture
+
+```mermaid
+flowchart LR
+    subgraph "Upload Flow"
+        A[Client Upload] --> B[API Gateway]
+        B --> C[Compression Service]
+        C --> D[Storage Service]
+    end
+    
+    subgraph "Storage"
+        D --> E[(Original Storage)]
+        D --> F[(Compressed Storage)]
+        D --> G[(Thumbnail Storage)]
+    end
+    
+    subgraph "CDN"
+        F --> H[CDN Edge]
+        G --> H
+        H --> I[Fast Delivery]
+    end
+    
+    subgraph "AI Processing"
+        F --> J[AI Service]
+        J --> K[Analysis Result]
+        K --> L[(Database)]
+    end
+```
+
+### 4.5.4 Storage Quota Management
+
+```python
+# app/infrastructure/services/quota_service.py
+from typing import Optional
+from uuid import UUID
+
+class StorageQuotaService:
+    """
+    Service untuk manajemen kuota storage pengguna.
+    """
+    
+    MAX_PHOTOS = 25
+    MAX_PHOTOS_PER_ANGLE = 5
+    STORAGE_LIMIT_BYTES = 500 * 1024 * 1024  # 500 MB
+    
+    async def check_quota(self, user_id: UUID) -> dict:
+        """Check if user can upload more photos."""
+        quota = await self._get_user_quota(user_id)
+        
+        return {
+            'can_upload': (
+                quota['total_photos'] < self.MAX_PHOTOS and
+                quota['storage_used_bytes'] < self.STORAGE_LIMIT_BYTES
+            ),
+            'remaining_photos': self.MAX_PHOTOS - quota['total_photos'],
+            'remaining_storage_bytes': self.STORAGE_LIMIT_BYTES - quota['storage_used_bytes'],
+            'quota': quota
+        }
+    
+    async def update_quota(
+        self, 
+        user_id: UUID, 
+        file_size: int
+    ) -> None:
+        """Update user's storage quota after upload."""
+        # Implementation
+        pass
+```
+
+---
+
 ## 5. Security Architecture
 
 ### 5.1 Authentication Flow
