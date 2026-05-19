@@ -28,6 +28,7 @@ out/
 coverage/
 *.tsbuildinfo
 .npm/
+package-lock.json
 
 # OS
 .DS_Store
