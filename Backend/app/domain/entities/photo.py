@@ -9,11 +9,11 @@ from app.domain.values.angle import PhotoAngle
 class Severity(str, Enum):
     """Hair loss severity based on Norwood Scale."""
 
-    STAGE_0 = "stage_0"    # >85% density - No Hair Loss
-    STAGE_1 = "stage_1"    # 70-85%        - Minimal
-    STAGE_3 = "stage_3"    # 50-70%        - Moderate
-    STAGE_5 = "stage_5"    # 30-50%        - Advanced
-    STAGE_7 = "stage_7"    # <30%          - Severe
+    STAGE_0 = "stage_0"  # >85% density - No Hair Loss
+    STAGE_1 = "stage_1"  # 70-85%        - Minimal
+    STAGE_3 = "stage_3"  # 50-70%        - Moderate
+    STAGE_5 = "stage_5"  # 30-50%        - Advanced
+    STAGE_7 = "stage_7"  # <30%          - Severe
 
     @classmethod
     def from_density(cls, density: float) -> "Severity":

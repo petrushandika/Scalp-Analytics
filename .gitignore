@@ -12,6 +12,7 @@ build/
 htmlcov/
 .coverage
 *.egg
+*.log
 
 # Environment
 .env
@@ -26,16 +27,20 @@ node_modules/
 out/
 coverage/
 *.tsbuildinfo
+.npm/
 
 # OS
 .DS_Store
+.DS_Store?
 Thumbs.db
+ehthumbs.db
 
 # Editor
 .vscode/
 .idea/
 *.swp
 *.swo
+*.orig
 
 # Storage
 Backend/storage/
