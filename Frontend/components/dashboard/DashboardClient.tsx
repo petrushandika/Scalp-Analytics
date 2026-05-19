@@ -1,7 +1,7 @@
 "use client";
 
-import { useAnalytics } from "@/hooks/analytics";
 import { Badge, Card } from "@/components/ui";
+import { useAnalytics } from "@/hooks/analytics";
 
 function Skeleton({ className }: { className?: string }) {
   return <div className={`animate-pulse rounded bg-gray-200 ${className ?? ""}`} />;

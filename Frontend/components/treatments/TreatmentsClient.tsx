@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTreatments, useCreateTreatment, useDeactivateTreatment, useDeleteTreatment } from "@/hooks/treatment";
+
 import { Button, Card, Input, Select, Textarea } from "@/components/ui";
+import { useTreatments, useCreateTreatment, useDeactivateTreatment, useDeleteTreatment } from "@/hooks/treatment";
 import { formatDate, getErrorMessage } from "@/lib/utils";
 import type { TreatmentCategory } from "@/types/treatment";
 

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useWaterToday, useLogWater, useMeals, useCreateMeal, useDeleteMeal, useSearchFoods } from "@/hooks/nutrition";
+
 import { Button, Card, Input, Select } from "@/components/ui";
+import { useWaterToday, useLogWater, useMeals, useCreateMeal, useDeleteMeal, useSearchFoods } from "@/hooks/nutrition";
 import { getErrorMessage } from "@/lib/utils";
 import type { MealType } from "@/types/nutrition";
 

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+import { Button, Card, Input, Select } from "@/components/ui";
 import { useAuth } from "@/hooks/auth";
 import { usersApi } from "@/lib/api";
-import { Button, Card, Input, Select } from "@/components/ui";
 import { getErrorMessage } from "@/lib/utils";
 import type { UpdateProfileRequest } from "@/types/auth";
 

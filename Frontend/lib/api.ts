@@ -1,12 +1,12 @@
 import axios, { type AxiosInstance, type AxiosResponse } from "axios";
 
+import type { Analytics } from "@/types/analytics";
 import type { ApiSuccessResponse } from "@/types/api";
 import { ApiError } from "@/types/api";
-import type { Photo, AnalyzeResult, PhotoAngle } from "@/types/photo";
 import type { Habit, CreateHabitRequest } from "@/types/habit";
-import type { Treatment, CreateTreatmentRequest } from "@/types/treatment";
-import type { Analytics } from "@/types/analytics";
 import type { Food, Meal, CreateMealRequest, WaterToday, WaterLog } from "@/types/nutrition";
+import type { Photo, AnalyzeResult, PhotoAngle } from "@/types/photo";
+import type { Treatment, CreateTreatmentRequest } from "@/types/treatment";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
