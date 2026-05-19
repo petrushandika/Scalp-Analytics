@@ -2,6 +2,11 @@ import axios, { type AxiosInstance, type AxiosResponse } from "axios";
 
 import type { ApiSuccessResponse } from "@/types/api";
 import { ApiError } from "@/types/api";
+import type { Photo, AnalyzeResult, PhotoAngle } from "@/types/photo";
+import type { Habit, CreateHabitRequest } from "@/types/habit";
+import type { Treatment, CreateTreatmentRequest } from "@/types/treatment";
+import type { Analytics } from "@/types/analytics";
+import type { Food, Meal, CreateMealRequest, WaterToday, WaterLog } from "@/types/nutrition";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -137,6 +142,79 @@ export const usersApi = {
   updateProfile: (payload: object) => request<object>("put", "/api/users/me", payload),
 
   deleteAccount: () => apiClient.delete("/api/users/me"),
+};
+
+// ─── Photo API ────────────────────────────────────────────────────────────────
+
+export const photoApi = {
+  analyze: (file: File): Promise<AnalyzeResult> => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiClient
+      .post<ApiSuccessResponse<AnalyzeResult>>("/api/photos/analyze", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data.data);
+  },
+
+  upload: ({ file, angle }: { file: File; angle: PhotoAngle }): Promise<Photo> => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("angle", angle);
+    return apiClient
+      .post<ApiSuccessResponse<Photo>>("/api/photos/upload", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data.data);
+  },
+
+  list: () => request<Photo[]>("get", "/api/photos/"),
+  get: (id: string) => request<Photo>("get", `/api/photos/${id}`),
+  delete: (id: string) => apiClient.delete(`/api/photos/${id}`),
+};
+
+// ─── Habit API ────────────────────────────────────────────────────────────────
+
+export const habitApi = {
+  list: () => request<Habit[]>("get", "/api/habits/"),
+  get: (id: string) => request<Habit>("get", `/api/habits/${id}`),
+  create: (payload: CreateHabitRequest) => request<Habit>("post", "/api/habits/", payload),
+  update: (id: string, payload: Partial<CreateHabitRequest>) =>
+    request<Habit>("put", `/api/habits/${id}`, payload),
+  delete: (id: string) => apiClient.delete(`/api/habits/${id}`),
+};
+
+// ─── Treatment API ────────────────────────────────────────────────────────────
+
+export const treatmentApi = {
+  list: (activeOnly?: boolean) =>
+    request<Treatment[]>("get", `/api/treatments/${activeOnly ? "?active_only=true" : ""}`),
+  get: (id: string) => request<Treatment>("get", `/api/treatments/${id}`),
+  create: (payload: CreateTreatmentRequest) =>
+    request<Treatment>("post", "/api/treatments/", payload),
+  update: (id: string, payload: Partial<CreateTreatmentRequest>) =>
+    request<Treatment>("put", `/api/treatments/${id}`, payload),
+  deactivate: (id: string) => request<Treatment>("patch", `/api/treatments/${id}/deactivate`),
+  delete: (id: string) => apiClient.delete(`/api/treatments/${id}`),
+};
+
+// ─── Analytics API ────────────────────────────────────────────────────────────
+
+export const analyticsApi = {
+  get: () => request<Analytics>("get", "/api/analytics/"),
+};
+
+// ─── Nutrition API ────────────────────────────────────────────────────────────
+
+export const nutritionApi = {
+  searchFoods: (q: string) => request<Food[]>("get", `/api/nutrition/foods?q=${encodeURIComponent(q)}`),
+  createMeal: (payload: CreateMealRequest) => request<Meal>("post", "/api/nutrition/meals", payload),
+  getMeals: (logDate: string) =>
+    request<Meal[]>("get", `/api/nutrition/meals?log_date=${logDate}`),
+  deleteMeal: (id: string) => apiClient.delete(`/api/nutrition/meals/${id}`),
+  logWater: (payload: { amount_ml: number; log_date: string }) =>
+    request<WaterLog>("post", "/api/nutrition/water", payload),
+  getWaterToday: () => request<WaterToday>("get", "/api/nutrition/water/today"),
 };
 
 export default apiClient;
