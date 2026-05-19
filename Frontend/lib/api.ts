@@ -23,10 +23,13 @@ export const tokenStorage = {
   setTokens: (access: string, refresh: string) => {
     localStorage.setItem(TOKEN_KEY, access);
     localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+    // sync to cookie so Next.js middleware can read it
+    document.cookie = `${TOKEN_KEY}=${access}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
   },
   clearTokens: () => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
+    document.cookie = `${TOKEN_KEY}=; path=/; max-age=0`;
   },
 };
 
