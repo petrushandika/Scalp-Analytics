@@ -8,6 +8,7 @@ from app.infrastructure.ai.analyzer import RECOMMENDATIONS, ScalpAnalyzer
 from app.infrastructure.database.db import get_db
 from app.infrastructure.database.models import PhotoModel
 from app.infrastructure.repositories.photo import PhotoRepository
+from app.infrastructure.storage.local import LocalStorage
 from app.presentation.middleware.auth import CurrentUser
 from app.presentation.schemas.photo import (
     AnalyzeResponse,
@@ -84,12 +85,12 @@ async def upload_photo(
             detail=f"Gagal memproses gambar: {e!s}",
         ) from e
 
-    # Simpan ke DB (image_url pakai placeholder — bisa diganti cloud storage)
-    photo_id = uuid.uuid4()
-    image_url = f"/uploads/{photo_id}{_get_ext(file.content_type)}"
+    # Simpan file ke storage lokal
+    storage = LocalStorage()
+    image_url = await storage.save(image_bytes, file.content_type)
 
     photo = PhotoModel(
-        id=photo_id,
+        id=uuid.uuid4(),
         user_id=current_user.id,
         image_url=image_url,
         angle=angle,
@@ -187,6 +188,7 @@ async def delete_photo(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Foto tidak ditemukan."
             )
         await repo.delete(photo)
+    await LocalStorage().delete(photo.image_url)
 
 
 def _get_ext(content_type: str) -> str:

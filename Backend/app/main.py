@@ -1,8 +1,10 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.infrastructure.database.db import create_tables, dispose_engine
@@ -48,6 +50,11 @@ def create_app() -> FastAPI:
     )
 
     register_exception_handlers(app)
+
+    # Serve uploaded photos
+    uploads_dir = Path(settings.storage_path) / "uploads"
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
     app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
     app.include_router(user.router, prefix="/api/users", tags=["Users"])
