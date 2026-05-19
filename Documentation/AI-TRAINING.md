@@ -755,77 +755,103 @@ def quantize_model(model_path: str, output_path: str):
 
 ## 11. Resources
 
-### 11.1 Referensi
+### 11.1 Referensi Framework
 - [TensorFlow Documentation](https://www.tensorflow.org/api_docs)
 - [MobileNetV2 Paper](https://arxiv.org/abs/1801.04381)
 - [Transfer Learning Guide](https://www.tensorflow.org/tutorials/images/transfer_learning)
+
+### 11.2 Dataset Utama (Ringkasan Cepat)
+- [Kaggle: Bald People 5000](https://www.kaggle.com/datasets/tapakah68/dataset-of-bald-people) — Gratis, AI training OK
+- [Roboflow: Hair & Scalp Disease](https://universe.roboflow.com/nayab-waris-hfzbj/hair-and-scalp-disease) — Gratis, CC BY 4.0, ada pretrained model
+- [HuggingFace: UniDataPro Norwood](https://huggingface.co/datasets/UniDataPro/hair-loss-male-norwood-scale) — Sample gratis, full berbayar
+- [ISIC Archive](https://challenge.isic-archive.com/data/) — Gratis CC-0, untuk transfer learning base
+
+### 11.3 Paper Kunci
+- [ML for AGA Trichoscopy Staging — PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC10412074/) — 90% akurasi
+- [Male Hair Loss Classification 2024 — ACM](https://dl.acm.org/doi/fullHtml/10.1145/3665689.3665733) — 93% akurasi
+- [Scalp Analysis Limited Data — MDPI](https://www.mdpi.com/2079-9292/12/6/1380) — Khusus small dataset
 
 ## 12. Data Sources dan Referensi
 
 ### 12.1 Dataset Utama untuk Training
 
-#### 12.1.1 Dataset Hair Loss dan Alopecia
+#### 12.1.1 Dataset Hair Loss dengan Norwood/Ludwig Labels (Terverifikasi)
 
-| Dataset | Deskripsi | Jumlah Gambar | Labels | Link |
-|---------|-----------|---------------|--------|------|
-| **Bald Women Dataset** | Alopecia images wanita dari top dan front | 500+ | 3 classes (Ludwig Scale) | https://github.com/UniData-Medical/bald-women-dataset |
-| **HAIRGO Dataset** | Hair loss risk prediction dataset | 1000+ | Risk levels | https://github.com/Helen-ZHOU-3253/HAIRGO-A-Machine-Learning-Model-for-Hair-Loss-Risk-Prediction-and-Early-Assessment |
-| **ISIC Archive** | International Skin Imaging Collaboration | 100,000+ | Dermoscopy labels | https://challenge.isic-archive.com/ |
-| **HAM10000** | Human Against Machine - Skin Lesion | 10,015 | 7 lesion types | https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T |
-| **SD-198** | Skin Disease 198 Dataset | 6,583 | 198 skin conditions | https://www.kaggle.com/datasets/wanderdust/skin-lesion-analyze-dataset |
-| **DermNet NZ** | Dermatology Image Library | 20,000+ | Skin conditions | https://dermnetnz.org/ |
+| Dataset | URL | Gambar | Labels | Lisensi | Biaya |
+|---------|-----|--------|--------|---------|-------|
+| **Hair Loss Male Norwood Scale** | https://www.kaggle.com/datasets/unidpro/hair-loss-male-norwood-scale | 2,400+ | 7 kelas Norwood-Hamilton, 5 sudut | CC-BY-NC-ND-4.0 | Sample gratis, full dataset berbayar via unidata.pro |
+| **Bald Men (TrainingDataPro)** | https://www.kaggle.com/datasets/trainingdatapro/bald-men | Multi-angle | Norwood scale | CC-BY-NC-ND-4.0 | Sample gratis, full berbayar |
+| **Bald Women (TrainingDataPro)** | https://www.kaggle.com/datasets/trainingdatapro/bald-women | 1,080+ | Ludwig scale | CC-BY-NC-ND-4.0 | Sample gratis, full berbayar |
+| **Bald People 5000 Images** | https://www.kaggle.com/datasets/tapakah68/dataset-of-bald-people | 5,000 | Binary (bald / not bald) | Cek halaman Kaggle | Gratis |
+| **Hair Loss Segmentation** | https://www.kaggle.com/datasets/trainingdatapro/bald-people-segmentation-dataset | — | Segmentation masks area bald | CC-BY-NC-ND-4.0 | Sample gratis, full berbayar |
 
-#### 12.1.2 Dataset Kulit Kepala dan Rambut
+#### 12.1.2 Dataset Hair Loss di Hugging Face (Terverifikasi)
 
-| Dataset | Deskripsi | Keterangan | Link |
-|---------|-----------|------------|------|
-| **Scalp Images Dataset** | Close-up scalp images | Multiple scalp conditions | Kaggle: scalp-images-dataset |
-| **Hair Follicle Dataset** | Microscopic hair images | Follicle analysis | Available upon request from dermatology departments |
-| **Dandruff Detection Dataset** | Scalp dandruff images | Classification: normal, mild, moderate, severe | Research institutions collaboration needed |
+| Dataset | URL | Isi | Biaya |
+|---------|-----|-----|-------|
+| **UniDataPro/hair-loss-male-norwood-scale** | https://huggingface.co/datasets/UniDataPro/hair-loss-male-norwood-scale | 2,400+ gambar, 5 sudut, 7 kelas Norwood, metadata usia/etnis | 25-row preview gratis, full berbayar |
+| **UniDataPro/men-hair-loss-dataset** | https://huggingface.co/datasets/UniDataPro/men-hair-loss-dataset | 3,100 gambar, 775 orang, front+top+segmentation mask | Sample gratis, full berbayar |
+| **UniDataPro/women-hair-loss-dataset** | https://huggingface.co/datasets/UniDataPro/women-hair-loss-dataset | 1,080 gambar wanita, top-view, segmentation mask | Sample gratis, full berbayar |
+| **TrainingDataPro/bald-men** | https://huggingface.co/datasets/TrainingDataPro/bald-men | Multi-angle, Norwood labels | Sample gratis, full berbayar |
+| **TrainingDataPro/bald_classification** | https://huggingface.co/datasets/TrainingDataPro/bald_classification | Binary classification, multi-demografi | Sample gratis, full berbayar |
+| **ud-medical/male-hair-loss-dataset** | https://huggingface.co/datasets/ud-medical/male-hair-loss-dataset | Foto medis 5 sudut, 7 kelas Norwood | Sample gratis, full berbayar |
 
-#### 12.1.3 Dataset Alternatif dan Terkait
+#### 12.1.3 Dataset Scalp & Kondisi Rambut di Roboflow (Gratis, AI Training OK)
 
-| Dataset | Deskripsi | Potensi Penggunaan | Link |
-|---------|-----------|-------------------|------|
-| **CelebA-HQ** | High-quality celebrity faces | Hairline extraction | http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html |
-| **FFHQ** | Flickr-Faces-HQ Dataset | Hair pattern analysis | https://github.com/NVlabs/ffhq-dataset |
-| **Skin Lesion Analysis** | ISIC Challenge datasets | Transfer learning | https://challenge.isic-archive.com/data/ |
-| **Medical Imaging Datasets** | Open-i, PubMed Central | Hair-related images | https://openi.nlm.nih.gov (via NCBI API) |
+| Dataset | URL | Gambar | Kelas | Lisensi |
+|---------|-----|--------|-------|---------|
+| **Hair Scalp Analysis (MVI)** | https://universe.roboflow.com/mvi-owp6u/hair-scalp-analysis | 888 | 9 kelas: Alopecia Areata, Dandruff, Folliculitis, Psoriasis, Low Hair Density, dll | Roboflow Public |
+| **Hair and Scalp Disease** | https://universe.roboflow.com/nayab-waris-hfzbj/hair-and-scalp-disease | — | 4 kelas: Alopecia Areata, Head Lice, Psoriasis, Folliculitis + pretrained model | CC BY 4.0 |
+| **Hair Disease Detection** | https://universe.roboflow.com/project-teqqx/hair-disease-detection | 3,600 | Alopecia Areata focused | Roboflow Public |
+| **Hairloss Segmentation** | https://universe.roboflow.com/tangoku/hairloss-segmentation | 461 | Segmentation: hair / head / bald | CC BY 4.0 |
+| **Scalp Data (dandruff/oiliness)** | https://universe.roboflow.com/buyumedatasets2/scalp-data | — | Dandruff, oiliness, sensitive scalp | Roboflow Public |
 
-### 12.2 Referensi Ilmiah
+#### 12.1.4 Dataset Transfer Learning (Dermoscopy, Gratis & CC-0)
 
-#### 12.2.1 Penelitian Kebotakan dan Analisis Rambut
+| Dataset | URL | Gambar | Keterangan |
+|---------|-----|--------|------------|
+| **ISIC Archive** | https://challenge.isic-archive.com/data/ | 120,000+ | Dermoscopy terbesar, CC-0 (boleh untuk AI training komersial). Tidak ada Norwood labels tapi domain image mirip dermoscopy kulit kepala |
+| **HAM10000** | https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T | 10,015 | 7 kelas lesi kulit, CC-0. Cocok sebagai base transfer learning |
+| **ISIC Archive Downloader** | https://github.com/GalAvineri/ISIC-Archive-Downloader | — | Script untuk bulk download ISIC |
 
-| Referensi | Judul | Deskripsi | Link |
-|-----------|-------|-----------|------|
-| Norwood OT (1975) | Male pattern baldness: classification and incidence | Klasifikasi Norwood Scale | Southern Medical Journal, 1975 |
-| Ludwig E (1977) | Classification of the types of androgenetic alopecia | Klasifikasi Ludwig Scale | British Journal of Dermatology, 1977 |
-| Hamilton JB (1951) | Patterned loss of hair in man | Studi awal pattern hair loss | Ann N Y Acad Sci, 1951 |
-| Olsen EA et al. (2005) | Hair density in Norwood pattern | Hair density analysis | J Am Acad Dermatol, 2005 |
-| Whiting DA (2004) | Diagnostic and predictive value of trichograms | Trichogram analysis | Dermatol Ther, 2004 |
-| Ramos PM, Miot HA (2022) | Female Pattern Hair Loss: A Clinical Review | Review FPHL | Dermatol Ther, 2022 |
-| Hillmer AM et al. (2005) | Genetic variation in the human androgen receptor gene | Studi genetik | Hum Mol Genet, 2005 |
+### 12.2 GitHub Repository Referensi Model (Terverifikasi)
 
-#### 12.2.2 Deep Learning untuk Analisis Kesehatan
+| Repo | URL | Isi | Lisensi |
+|------|-----|-----|---------|
+| **Intelligent Hair Analysis System** | https://github.com/macarize/Intelligent_hair_analysis_system | Norwood-Hamilton classification via K-means + MSE image comparison, Python | Tidak ada lisensi |
+| **Mobile Hair Segmentation PyTorch** | https://github.com/wonbeomjang/mobile-hair-segmentation-pytorch | Real-time hair matting, PyTorch, pretrained weights tersedia | MIT |
+| **Hair Segmentation TensorFlow** | https://github.com/thangtran480/hair-segmentation | TensorFlow, mobile-optimized, pretrained model, CelebAMask-HQ | MIT |
+| **PyTorch Hair Segmentation** | https://github.com/YBIGTA/pytorch-hair-segmentation | Semantic segmentation, Figaro-1K dataset, PyTorch | MIT |
+| **Awesome Skin Image Analysis Datasets** | https://github.com/sfu-mial/awesome-skin-image-analysis-datasets | Daftar lengkap semua dataset analisis kulit yang diketahui publik | MIT |
 
-| Referensi | Judul | Deskripsi | Link |
-|-----------|-------|-----------|------|
-| Esteva A et al. (2017) | Dermatologist-level classification of skin cancer with deep neural networks | CNN untuk dermatologi | Nature, 2017 |
-| Tschandl P et al. (2018) | Skin lesion analysis toward melanoma detection | ISIC Challenge | arXiv:1803.04150 |
-| Codella NCF et al. (2018) | Deep learning, sparse representation for skin lesion analysis | ISIC 2017 Challenge | ISIC 2017 |
-| Litjens G et al. (2017) | A survey on deep learning in medical image analysis | Review CNN medis | Med Image Anal, 2017 |
+### 12.3 Referensi Ilmiah dengan URL Aktif (Terverifikasi)
 
-#### 12.2.3 Model Architecture
+#### 12.3.1 Paper Deep Learning untuk Hair Loss (Open Access)
 
-| Referensi | Judul | Deskripsi | Link |
-|-----------|-------|-----------|------|
-| Sandler M et al. (2018) | MobileNetV2: Inverted Residuals and Linear Bottlenecks | Efficient CNN architecture | arXiv:1801.04381 |
-| He K et al. (2016) | Deep Residual Learning for Image Recognition | ResNet architecture | CVPR 2016 |
-| Tan M, Le Q (2019) | EfficientNet: Rethinking Model Scaling for CNNs | Efficient scaling | ICML 2019 |
+| Paper | URL | Akurasi | Relevansi |
+|-------|-----|---------|-----------|
+| Deep Learning Trichoscopic Analysis for AGA (BASP Classification) | https://pmc.ncbi.nlm.nih.gov/articles/PMC9631273/ | — | CNN pada 2,910 trichoscopic images, klasifikasi BASP scale |
+| Hair Follicle Classification with Mask R-CNN | https://pmc.ncbi.nlm.nih.gov/articles/PMC9605010/ | — | Per-follicle detection + severity scoring |
+| ML Algorithm for Trichoscopy AGA Staging | https://pmc.ncbi.nlm.nih.gov/articles/PMC10412074/ | 94.3% train / 90.0% test | ML pada trichoscopy, staging alopecia androgenic |
+| Enhanced Hair Loss Stratification with AI (2025) | https://www.nature.com/articles/s41598-025-23561-3 | — | Novel Loss Region Ratio (LRR) metric, Nature Scientific Reports |
+| Classification of Male Hair Loss Deep Learning (2024) | https://dl.acm.org/doi/fullHtml/10.1145/3665689.3665733 | 93.08% (RegNet-64) | Perbandingan VGG16, ResNet-50, RegNet-64 |
+| Deep Learning Scalp Analysis with Limited Data | https://www.mdpi.com/2079-9292/12/6/1380 | — | Solusi khusus untuk dataset kecil, sangat relevan untuk MVP |
 
-### 12.3 Standar Klasifikasi Medis
+#### 12.3.2 Paper Medis Dasar (DOI)
 
-#### 12.3.1 Norwood Scale (Pria)
+| Paper | DOI | Keterangan |
+|-------|-----|------------|
+| Norwood OT (1975) - Male pattern baldness classification | 10.1097/00007611-197511000-00002 | Standar Norwood Scale |
+| Ludwig E (1977) - Androgenetic alopecia classification female | 10.1111/j.1365-2133.1977.tb06867.x | Standar Ludwig Scale |
+| Esteva et al. (2017) - Dermatologist-level CNN skin cancer | 10.1038/nature21056 | CNN dermatologi benchmark |
+| Tschandl et al. (2018) - HAM10000 dataset | 10.1038/sdata.2018.161 | Dataset dermoscopy terbesar |
+| Sandler et al. (2018) - MobileNetV2 | 10.1109/CVPR.2018.00474 | Arsitektur backbone model |
+| Litjens et al. (2017) - Survey deep learning medical imaging | 10.1016/j.media.2017.07.005 | Review komprehensif CNN medis |
+| Ramos PM, Miot HA (2022) - Female Pattern Hair Loss review | 10.1111/dth.15371 | Review FPHL terbaru |
+
+### 12.4 Standar Klasifikasi Medis
+
+#### 12.4.1 Norwood Scale (Pria)
 
 | Stage | Karakteristik | Density (%) | Deskripsi |
 |-------|---------------|------------|-----------|
@@ -833,13 +859,12 @@ def quantize_model(model_path: str, output_path: str):
 | Stage 1 | Minimal temple recession | 80-85% | Kerontokan minimal di pelipis |
 | Stage 2 | Noticeable temple recession | 70-80% | Pelipis terlihat mundur |
 | Stage 3 | Deep temple recession | 60-70% | Vertex mulai menipis |
-| Stage 3V | Vertex thinning | 55-65% | Vertex area thinning |
 | Stage 4 | Significant vertex thinning | 50-60% | Area vertex signifikan |
 | Stage 5 | Large vertex balding area | 40-50% | Vertex besar |
 | Stage 6 | Vertex and front merging | 30-40% | Vertex dan front menyatu |
 | Stage 7 | Most severe pattern | <30% | Parah, horseshoe pattern |
 
-#### 12.3.2 Ludwig Scale (Wanita)
+#### 12.4.2 Ludwig Scale (Wanita)
 
 | Stage | Karakteristik | Density (%) | Deskripsi |
 |-------|---------------|------------|-----------|
@@ -848,7 +873,7 @@ def quantize_model(model_path: str, output_path: str):
 | Stage 2 | Moderate crown thinning | 60-75% | Penipisan moderate |
 | Stage 3 | Severe crown thinning | <60% | Penipisan parah |
 
-#### 12.3.3 Scalp Condition Classification
+#### 12.4.3 Scalp Condition Classification
 
 | Kondisi | Karakteristik | Tanda Visual |
 |---------|---------------|--------------|
@@ -859,9 +884,9 @@ def quantize_model(model_path: str, output_path: str):
 | Psoriasis | Autoimmune | Patch tebal, bersisik |
 | Folliculitis | Inflamasi folikel | Pustula, kemerahan |
 
-### 12.4 Nutrisi untuk Kesehatan Rambut
+### 12.5 Nutrisi untuk Kesehatan Rambut
 
-#### 12.4.1 Nutrisi Esensial
+#### 12.5.1 Nutrisi Esensial
 
 | Nutrisi | RDA | Sumber Utama | Fungsi untuk Rambut |
 |---------|-----|--------------|---------------------|
@@ -876,75 +901,64 @@ def quantize_model(model_path: str, output_path: str):
 | Vitamin C | 65-90 mg | Jeruk, paprika, brokoli | Absorpsi iron |
 | Folate (B9) | 400 mcg | Sayuran hijau, kacang | Pembelahan sel |
 
-#### 12.4.2 Sumber Data Nutrisi
+#### 12.5.2 Sumber Data Nutrisi (Terverifikasi)
 
 | Database | URL | Keterangan |
 |----------|-----|------------|
-| **USDA FoodData Central** | https://fdc.nal.usda.gov | Database nutrisi resmi AS, 8000+ makanan |
-| **Tabel Komposisi Pangan Indonesia** | https://www.gizi.kemkes.go.id atau https://pom.go.id | DB nutrisi makanan Indonesia |
-| **Nutritionix API** | https://nutritionix.com | API nutrisi komersial |
-| **FatSecret API** | https://platform.fatsecret.com | Food database API |
-| **Open Food Facts** | https://world.openfoodfacts.org | Database makanan open source |
-| **USDA Branded Food Products** | https://fdc.nal.usda.gov/download-datasets.html | Produk branded |
+| **USDA FoodData Central** | https://fdc.nal.usda.gov | Database nutrisi resmi AS, 8000+ makanan, gratis |
+| **USDA Download Datasets** | https://fdc.nal.usda.gov/download-datasets.html | Bulk download CSV/JSON semua data nutrisi |
+| **Open Food Facts** | https://world.openfoodfacts.org | Database makanan open source, termasuk produk Indonesia |
+| **Nutritionix API** | https://www.nutritionix.com/business/api | API nutrisi komersial, ada free tier |
+| **FatSecret Platform API** | https://platform.fatsecret.com | Food database API, ada free tier |
 
-### 12.5 Lokasi Dataset Spesifik
+### 12.6 Strategi Pendekatan Dataset untuk MVP
 
-#### 12.5.1 Dataset untuk Hair Density
+#### 12.6.1 Rekomendasi Urutan (Paling Praktis ke Ideal)
 
-```mermaid
-flowchart TD
-    A[Dataset Sources] --> B[Public Datasets]
-    A --> C[Research Collaboration]
-    A --> D[Self-Collection]
-    
-    B --> B1[ISIC Archive]
-    B --> B2[DermNet NZ]
-    B --> B3[Kaggle Datasets]
-    B --> B4[Open-i]
-    
-    C --> C1[Dermatology Departments]
-    C --> C2[Hair Clinics]
-    C --> C3[Medical Schools]
-    
-    D --> D1[Mobile Phone Collection]
-    D --> D2[Standardized Angles]
-    D --> D3[Ground Truth Labeling]
+```
+FASE 1 — Development & Testing (Gratis, Mulai Sekarang)
+├── Roboflow: Hair and Scalp Disease (CC BY 4.0, ada pretrained model)
+│   → https://universe.roboflow.com/nayab-waris-hfzbj/hair-and-scalp-disease
+├── Roboflow: Hair Disease Detection (3,600 gambar)
+│   → https://universe.roboflow.com/project-teqqx/hair-disease-detection
+└── ISIC Archive (120k+ gambar CC-0, untuk transfer learning base)
+    → https://challenge.isic-archive.com/data/
+
+FASE 2 — Norwood Classification (Sample Gratis di HuggingFace)
+├── UniDataPro Norwood Scale (25-row preview, cukup untuk proof-of-concept)
+│   → https://huggingface.co/datasets/UniDataPro/hair-loss-male-norwood-scale
+└── Kaggle Bald People 5000 (gratis, binary bald/not-bald)
+    → https://www.kaggle.com/datasets/tapakah68/dataset-of-bald-people
+
+FASE 3 — Production (Berbayar atau Self-Collect)
+├── Beli full dataset UniDataPro (unidata.pro) — 2,400+ berlabel Norwood
+└── Kumpulkan dari user app (crowdsourcing) + labeling manual
 ```
 
-#### 12.5.2 Sumber Dataset dan Akses
+#### 12.6.2 Pendekatan Self-Collection dari User App
 
-| Sumber | Tipe Data | Prosedur Akses | Cost |
-|--------|-----------|----------------|------|
-| ISIC Archive | Dermoscopy images | Download langsung | Free |
-| DermNet NZ | Clinical images | Web scraping atau request | Free |
-| Open-i | Medical images + metadata | API access | Free |
-| Kaggle | Various datasets | Kaggle account | Free |
-| Clinical Partners | Scalp photos | IRB + Data sharing agreement | Varies |
-| Self-Collection | User uploads | App deployment | Development cost |
+```
+User upload foto
+      ↓
+Simpan ke storage + DB (tabel photos)
+      ↓
+Tim review foto (admin panel)
+      ↓
+Label manual density% + Norwood stage
+      ↓
+Masuk ke training dataset
+      ↓
+Retrain model setiap 500 foto baru berlabel
+```
 
-#### 12.5.3 Catatan Penting tentang Dataset
+Ini yang paling realistis untuk startup karena:
+- Data relevan langsung dari target pengguna
+- Semakin banyak user → dataset semakin besar
+- Label dari dermatologis mitra meningkatkan akurasi
 
-**Ketersediaan Dataset:**
-- Dataset publik dapat berubah atau dipindahkan dari waktu ke waktu
-- Selalu verifikasi ketersediaan dataset sebelum mulai training
-- Simpan salinan lokal dataset yang sudah didownload
+### 12.7 Data Augmentation Strategies
 
-**Alternatif jika Dataset Tidak Tersedia:**
-1. **SD-198**: Gunakan ISIC Archive atau cari di Kaggle dengan keyword "skin disease"
-2. **Dataset Hair Loss**: Cari di Kaggle dengan keyword "alopecia", "hair loss", "scalp"
-3. **Self-Collection**: Kumpulkan data sendiri dengan protokol yang jelas
-4. **Transfer Learning**: Gunakan pre-trained model dari dataset serupa
-
-**Rekomendasi Sumber Dataset Alternatif:**
-| Platform | URL | Keterangan |
-|---------|-----|------------|
-| Kaggle Datasets | https://www.kaggle.com/datasets | Berbagai dataset kesehatan kulit|
-| Papers With Code | https://paperswithcode.com/datasets | Dataset dengan benchmark |
-| Hugging Face Datasets | https://huggingface.co/datasets | Dataset untuk ML |
-
-### 12.6 Data Augmentation Strategies
-
-#### 12.6.1 Teknik Augmentasi untuk Hair Images
+#### 12.7.1 Teknik Augmentasi untuk Hair Images
 
 ```python
 # augmentation_strategies.py
@@ -986,7 +1000,7 @@ val_transforms = A.Compose([
 ])
 ```
 
-#### 12.6.2 Synthetic Data Generation
+#### 12.7.2 Synthetic Data Generation
 
 | Teknik | Deskripsi | Use Case |
 |--------|-----------|----------|
@@ -996,9 +1010,9 @@ val_transforms = A.Compose([
 | Copy-Paste | Copy hair regions | Increase diversity |
 | Style Transfer | Simulate different lighting | Real-world variation |
 
-### 12.7 Ground Truth Annotation Guidelines
+### 12.8 Ground Truth Annotation Guidelines
 
-#### 12.7.1 Annotation Protocol
+#### 12.8.1 Annotation Protocol
 
 ```markdown
 ## Hair Density Annotation Protocol
@@ -1033,9 +1047,9 @@ val_transforms = A.Compose([
 - Disagreement resolution: consensus discussion
 ```
 
-### 12.8 Data Collection Methodology
+### 12.9 Data Collection Methodology
 
-#### 12.8.1 Prosedur Pengumpulan Data
+#### 12.9.1 Prosedur Pengumpulan Data
 
 ```mermaid
 flowchart TD
@@ -1052,7 +1066,7 @@ flowchart TD
     K --> L[Split: Train/Val/Test]
 ```
 
-#### 12.8.2 Kriteria Penerimaan Data
+#### 12.9.2 Kriteria Penerimaan Data
 
 | Kriteria | Persyaratan | Alasan |
 |---------|-------------|--------|
@@ -1063,9 +1077,31 @@ flowchart TD
 | Background | Kontras dengan rambut | Kemudahan segmentasi |
 | Cleanliness | Kulit kepala bersih | Tidak ada artifact |
 
-### 12.9 Referensi dan DOI
+### 12.10 Tools dan Libraries
 
-#### 12.9.1 Paper Utama dengan DOI
+#### 12.10.1 Machine Learning Frameworks
+
+| Library | Versi | Kegunaan | URL |
+|---------|-------|----------|-----|
+| TensorFlow | 2.12+ | Model training | https://www.tensorflow.org |
+| PyTorch | 2.0+ | Alternative framework | https://pytorch.org |
+| OpenCV | 4.8+ | Image preprocessing | https://opencv.org |
+| Albumentations | 1.3+ | Data augmentation | https://albumentations.ai |
+| scikit-learn | 1.3+ | Metrics dan utilities | https://scikit-learn.org |
+
+#### 12.10.2 Pretrained Models yang Bisa Langsung Dipakai
+
+| Model | URL | Keterangan |
+|-------|-----|------------|
+| **Hair & Scalp Disease (Roboflow)** | https://universe.roboflow.com/nayab-waris-hfzbj/hair-and-scalp-disease | YOLO weights + hosted inference API, gratis, CC BY 4.0 |
+| **MobileNetV2 (TensorFlow)** | https://www.tensorflow.org/api_docs/python/tf/keras/applications/MobileNetV2 | ImageNet pretrained, titik awal transfer learning |
+| **EfficientNet (TensorFlow)** | https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB0 | Lebih akurat dari MobileNetV2 untuk medical imaging |
+
+---
+
+### 12.11 Referensi DOI Lengkap
+
+#### 12.11.1 Paper Utama dengan DOI
 
 ```
 Medical Imaging References:
@@ -1116,29 +1152,6 @@ Architecture References:
    DOI: 10.1109/CVPR.2016.90
 ```
 
-### 12.10 Tools dan Libraries
-
-#### 12.10.1 Machine Learning Frameworks
-
-| Library | Versi | Kegunaan | Link |
-|---------|-------|----------|------|
-| TensorFlow | 2.12+ | Model training | https://www.tensorflow.org |
-| PyTorch | 2.0+ | Alternative framework | https://pytorch.org |
-| OpenCV | 4.8+ | Image preprocessing | https://opencv.org |
-| Albumentations | 1.3+ | Data augmentation | https://albumentations.ai |
-| scikit-learn | 1.3+ | Metrics dan utilities | https://scikit-learn.org |
-| NumPy | 1.24+ | Numerical operations | https://numpy.org |
-| Pandas | 2.0+ | Data manipulation | https://pandas.pydata.org |
-| Matplotlib | 3.7+ | Visualization | https://matplotlib.org |
-
-#### 12.10.2 Model Zoo dan Pre-trained Weights
-
-| Model | Backbone | Weights | Kegunaan |
-|-------|-----------|---------|----------|
-| EfficientNet-B0 | Pre-trained | ImageNet | Transfer learning |
-| ResNet-50 | Pre-trained | ImageNet | Feature extraction |
-| MobileNetV2 | Pre-trained | ImageNet | Efficient inference |
-| EfficientNetV2 | Pre-trained | ImageNet | Balanced performance |
 
 ---
 
