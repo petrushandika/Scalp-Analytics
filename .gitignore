@@ -43,6 +43,9 @@ ehthumbs.db
 *.swo
 *.orig
 
+# Local guides / IDE templates
+guides/
+
 # Storage
 Backend/storage/
 
