@@ -100,9 +100,8 @@ async def upload_photo(
         original_size_bytes=len(image_bytes),
     )
 
-    async with db.begin():
-        repo = PhotoRepository(db)
-        photo = await repo.save(photo)
+    repo = PhotoRepository(db)
+    photo = await repo.save(photo)
 
     return PhotoUploadResponse(
         id=photo.id,
@@ -124,9 +123,8 @@ async def list_photos(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> list[PhotoListItem]:
     """Ambil semua foto milik user yang sedang login."""
-    async with db.begin():
-        repo = PhotoRepository(db)
-        photos = await repo.find_by_user(current_user.id)
+    repo = PhotoRepository(db)
+    photos = await repo.find_by_user(current_user.id)
 
     return [
         PhotoListItem(
@@ -148,9 +146,8 @@ async def get_photo(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> PhotoUploadResponse:
     """Ambil detail satu foto berdasarkan ID."""
-    async with db.begin():
-        repo = PhotoRepository(db)
-        photo = await repo.find_by_id(photo_id)
+    repo = PhotoRepository(db)
+    photo = await repo.find_by_id(photo_id)
 
     if not photo or photo.user_id != current_user.id:
         raise HTTPException(
@@ -180,14 +177,13 @@ async def delete_photo(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> None:
     """Hapus foto milik user."""
-    async with db.begin():
-        repo = PhotoRepository(db)
-        photo = await repo.find_by_id(photo_id)
-        if not photo or photo.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Foto tidak ditemukan."
-            )
-        await repo.delete(photo)
+    repo = PhotoRepository(db)
+    photo = await repo.find_by_id(photo_id)
+    if not photo or photo.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Foto tidak ditemukan."
+        )
+    await repo.delete(photo)
     await LocalStorage().delete(photo.image_url)
 
 

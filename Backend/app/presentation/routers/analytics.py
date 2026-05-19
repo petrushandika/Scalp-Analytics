@@ -20,12 +20,11 @@ async def get_analytics(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> AnalyticsResponse:
     """Dashboard analytics: progress kerontokan, habit summary, treatment aktif."""
-    async with db.begin():
-        photos = await PhotoRepository(db).find_by_user(current_user.id)
-        habits = await HabitRepository(db).find_by_user(current_user.id)
-        treatments = await TreatmentRepository(db).find_by_user(
-            current_user.id, active_only=True
-        )
+    photos = await PhotoRepository(db).find_by_user(current_user.id)
+    habits = await HabitRepository(db).find_by_user(current_user.id)
+    treatments = await TreatmentRepository(db).find_by_user(
+        current_user.id, active_only=True
+    )
 
     # Progress kerontokan dari waktu ke waktu
     progress = [

@@ -35,8 +35,7 @@ async def search_foods(
     q: str = Query(..., min_length=1),
 ) -> list[FoodResponse]:
     """Cari makanan berdasarkan nama."""
-    async with db.begin():
-        foods = await FoodRepository(db).search(q)
+    foods = await FoodRepository(db).search(q)
     return [_food_to_response(f) for f in foods]
 
 
@@ -45,8 +44,7 @@ async def get_food(
     food_id: uuid.UUID,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> FoodResponse:
-    async with db.begin():
-        food = await FoodRepository(db).find_by_id(food_id)
+    food = await FoodRepository(db).find_by_id(food_id)
     if not food:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Makanan tidak ditemukan."
@@ -64,37 +62,36 @@ async def create_meal(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> MealResponse:
     """Catat log makan beserta item makanannya."""
-    async with db.begin():
-        meal_repo = MealRepository(db)
-        food_repo = FoodRepository(db)
+    meal_repo = MealRepository(db)
+    food_repo = FoodRepository(db)
 
-        meal = MealModel(
-            user_id=current_user.id,
-            log_date=body.log_date,
-            log_time=body.log_time,
-            meal_type=body.meal_type,
-            notes=body.notes,
-        )
-        meal = await meal_repo.save(meal)
+    meal = MealModel(
+        user_id=current_user.id,
+        log_date=body.log_date,
+        log_time=body.log_time,
+        meal_type=body.meal_type,
+        notes=body.notes,
+    )
+    meal = await meal_repo.save(meal)
 
-        for item_req in body.items:
-            food = await food_repo.find_by_id(item_req.food_id)
-            if not food:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Makanan dengan ID {item_req.food_id} tidak ditemukan.",
-                )
-            item = ItemModel(
-                meal_id=meal.id,
-                food_id=item_req.food_id,
-                quantity=item_req.quantity,
-                unit=item_req.unit,
-                serving_multiplier=item_req.serving_multiplier,
+    for item_req in body.items:
+        food = await food_repo.find_by_id(item_req.food_id)
+        if not food:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Makanan dengan ID {item_req.food_id} tidak ditemukan.",
             )
-            db.add(item)
+        item = ItemModel(
+            meal_id=meal.id,
+            food_id=item_req.food_id,
+            quantity=item_req.quantity,
+            unit=item_req.unit,
+            serving_multiplier=item_req.serving_multiplier,
+        )
+        db.add(item)
 
-        await db.flush()
-        meal = await meal_repo.find_by_id(meal.id)
+    await db.flush()
+    meal = await meal_repo.find_by_id(meal.id)
 
     return _meal_to_response(meal)
 
@@ -106,12 +103,11 @@ async def list_meals(
     log_date: date | None = Query(None),
 ) -> list[MealResponse]:
     """Ambil log makan. Filter by tanggal jika ?log_date=YYYY-MM-DD."""
-    async with db.begin():
-        repo = MealRepository(db)
-        if log_date:
-            meals = await repo.find_by_user_date(current_user.id, log_date)
-        else:
-            meals = await repo.find_by_user(current_user.id)
+    repo = MealRepository(db)
+    if log_date:
+        meals = await repo.find_by_user_date(current_user.id, log_date)
+    else:
+        meals = await repo.find_by_user(current_user.id)
     return [_meal_to_response(m) for m in meals]
 
 
@@ -121,8 +117,7 @@ async def get_meal(
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> MealResponse:
-    async with db.begin():
-        meal = await MealRepository(db).find_by_id(meal_id)
+    meal = await MealRepository(db).find_by_id(meal_id)
     if not meal or meal.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Log makan tidak ditemukan."
@@ -136,15 +131,14 @@ async def delete_meal(
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> None:
-    async with db.begin():
-        repo = MealRepository(db)
-        meal = await repo.find_by_id(meal_id)
-        if not meal or meal.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Log makan tidak ditemukan.",
-            )
-        await repo.delete(meal)
+    repo = MealRepository(db)
+    meal = await repo.find_by_id(meal_id)
+    if not meal or meal.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Log makan tidak ditemukan.",
+        )
+    await repo.delete(meal)
 
 
 # ─── Water ───────────────────────────────────────────────────────────────────
@@ -159,19 +153,18 @@ async def log_water(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> WaterResponse:
     """Tambah intake air. Jika sudah ada log hari itu, jumlahnya ditambahkan."""
-    async with db.begin():
-        repo = WaterRepository(db)
-        existing = await repo.find_by_date(current_user.id, body.log_date)
-        if existing:
-            existing.amount_ml = float(existing.amount_ml) + body.amount_ml
-            water = await repo.save(existing)
-        else:
-            water = WaterModel(
-                user_id=current_user.id,
-                log_date=body.log_date,
-                amount_ml=body.amount_ml,
-            )
-            water = await repo.save(water)
+    repo = WaterRepository(db)
+    existing = await repo.find_by_date(current_user.id, body.log_date)
+    if existing:
+        existing.amount_ml = float(existing.amount_ml) + body.amount_ml
+        water = await repo.save(existing)
+    else:
+        water = WaterModel(
+            user_id=current_user.id,
+            log_date=body.log_date,
+            amount_ml=body.amount_ml,
+        )
+        water = await repo.save(water)
     return _water_to_response(water)
 
 
@@ -180,8 +173,7 @@ async def list_water(
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> list[WaterResponse]:
-    async with db.begin():
-        water_logs = await WaterRepository(db).find_by_user(current_user.id)
+    water_logs = await WaterRepository(db).find_by_user(current_user.id)
     return [_water_to_response(w) for w in water_logs]
 
 
@@ -194,8 +186,7 @@ async def get_water_today(
     from datetime import UTC, datetime
 
     today = datetime.now(UTC).date()
-    async with db.begin():
-        water = await WaterRepository(db).find_by_date(current_user.id, today)
+    water = await WaterRepository(db).find_by_date(current_user.id, today)
     return _water_to_response(water) if water else None
 
 

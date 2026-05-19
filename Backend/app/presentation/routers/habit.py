@@ -25,22 +25,21 @@ async def create_habit(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> HabitResponse:
     """Buat log kebiasaan harian. Satu tanggal hanya boleh satu log."""
-    async with db.begin():
-        repo = HabitRepository(db)
-        existing = await repo.find_by_date(current_user.id, body.log_date)
-        if existing:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Log untuk tanggal {body.log_date} sudah ada.",
-            )
-        habit = HabitModel(
-            user_id=current_user.id,
-            log_date=body.log_date,
-            stress_level=body.stress_level,
-            sleep_hours=body.sleep_hours,
-            notes=body.notes,
+    repo = HabitRepository(db)
+    existing = await repo.find_by_date(current_user.id, body.log_date)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Log untuk tanggal {body.log_date} sudah ada.",
         )
-        habit = await repo.save(habit)
+    habit = HabitModel(
+        user_id=current_user.id,
+        log_date=body.log_date,
+        stress_level=body.stress_level,
+        sleep_hours=body.sleep_hours,
+        notes=body.notes,
+    )
+    habit = await repo.save(habit)
 
     return _to_response(habit)
 
@@ -51,9 +50,8 @@ async def list_habits(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> list[HabitResponse]:
     """Ambil semua log kebiasaan milik user."""
-    async with db.begin():
-        repo = HabitRepository(db)
-        habits = await repo.find_by_user(current_user.id)
+    repo = HabitRepository(db)
+    habits = await repo.find_by_user(current_user.id)
     return [_to_response(h) for h in habits]
 
 
@@ -63,9 +61,8 @@ async def get_habit(
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> HabitResponse:
-    async with db.begin():
-        repo = HabitRepository(db)
-        habit = await repo.find_by_id(habit_id)
+    repo = HabitRepository(db)
+    habit = await repo.find_by_id(habit_id)
     if not habit or habit.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Log tidak ditemukan."
@@ -80,20 +77,19 @@ async def update_habit(
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> HabitResponse:
-    async with db.begin():
-        repo = HabitRepository(db)
-        habit = await repo.find_by_id(habit_id)
-        if not habit or habit.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Log tidak ditemukan."
-            )
-        if body.stress_level is not None:
-            habit.stress_level = body.stress_level
-        if body.sleep_hours is not None:
-            habit.sleep_hours = body.sleep_hours
-        if body.notes is not None:
-            habit.notes = body.notes
-        habit = await repo.save(habit)
+    repo = HabitRepository(db)
+    habit = await repo.find_by_id(habit_id)
+    if not habit or habit.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Log tidak ditemukan."
+        )
+    if body.stress_level is not None:
+        habit.stress_level = body.stress_level
+    if body.sleep_hours is not None:
+        habit.sleep_hours = body.sleep_hours
+    if body.notes is not None:
+        habit.notes = body.notes
+    habit = await repo.save(habit)
     return _to_response(habit)
 
 
@@ -103,14 +99,13 @@ async def delete_habit(
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> None:
-    async with db.begin():
-        repo = HabitRepository(db)
-        habit = await repo.find_by_id(habit_id)
-        if not habit or habit.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Log tidak ditemukan."
-            )
-        await repo.delete(habit)
+    repo = HabitRepository(db)
+    habit = await repo.find_by_id(habit_id)
+    if not habit or habit.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Log tidak ditemukan."
+        )
+    await repo.delete(habit)
 
 
 def _to_response(habit: HabitModel) -> HabitResponse:
