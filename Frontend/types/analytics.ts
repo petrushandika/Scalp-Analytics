@@ -9,8 +9,8 @@ export interface Analytics {
   total_photos: number;
   latest_severity_stage: SeverityStage | null;
   progress: ProgressPoint[];
-  avg_stress: number | null;
-  avg_sleep: number | null;
+  avg_stress_level: number | null;
+  avg_sleep_hours: number | null;
   active_treatments: number;
   treatment_names: string[];
 }
