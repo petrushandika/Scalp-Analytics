@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.presentation.schemas.base_schema import error_response
+from app.presentation.schemas.base import error_response
 
 
 def register_exception_handlers(app: FastAPI) -> None:

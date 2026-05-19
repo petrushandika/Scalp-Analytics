@@ -50,12 +50,6 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     return _session_factory
 
 
-# Alias untuk backward compatibility dengan kode yang sudah ada
-@property  # type: ignore[misc]
-def engine() -> AsyncEngine:
-    return get_engine()
-
-
 async def create_tables() -> None:
     """Buat semua tabel database (digunakan untuk development/testing)."""
     from app.infrastructure.database import models  # noqa: F401

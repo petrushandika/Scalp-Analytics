@@ -1,9 +1,9 @@
-from app.infrastructure.repositories.token_repository import (
+from app.infrastructure.repositories.token import (
     EmailVerificationRepository,
     PasswordResetRepository,
     RefreshTokenRepository,
 )
-from app.infrastructure.repositories.user_repository import UserRepository
+from app.infrastructure.repositories.user import UserRepository
 
 
 __all__ = [

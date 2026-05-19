@@ -7,11 +7,11 @@ from uuid import uuid4
 
 import pytest
 
-from app.domain.entities.habit_log import HabitLog
-from app.domain.entities.photo import Photo, SeverityStage
+from app.domain.entities.habit import HabitLog
+from app.domain.entities.photo import Photo, Severity
 from app.domain.entities.user import Gender, User
-from app.domain.value_objects.email import Email
-from app.domain.value_objects.photo_angle import PhotoAngle
+from app.domain.values.angle import PhotoAngle
+from app.domain.values.email import Email
 
 
 class TestUserEntity:
@@ -78,7 +78,7 @@ class TestPhotoEntity:
         )
         assert photo.image_url == "https://example.com/photo.jpg"
         assert photo.angle == PhotoAngle.FRONT
-        assert photo.is_analyzed is False
+        assert photo.analyzed is False
 
     def test_set_analysis_result(self) -> None:
         """Hasil analisis berhasil disimpan ke foto."""
@@ -87,19 +87,19 @@ class TestPhotoEntity:
             image_url="https://example.com/photo.jpg",
             angle=PhotoAngle.TOP,
         )
-        photo.set_analysis_result(density=75.0, confidence=0.92)
-        assert photo.density_percentage == 75.0
-        assert photo.confidence_score == 0.92
-        assert photo.severity_stage == SeverityStage.STAGE_1_2
-        assert photo.is_analyzed is True
+        photo.set_analysis(density=75.0, confidence=0.92)
+        assert photo.density == 75.0
+        assert photo.confidence == 0.92
+        assert photo.severity == Severity.STAGE_1
+        assert photo.analyzed is True
 
-    def test_severity_stage_classification(self) -> None:
-        """Severity stage diklasifikasikan dengan benar berdasarkan density."""
-        assert SeverityStage.from_density(90.0) == SeverityStage.STAGE_0
-        assert SeverityStage.from_density(75.0) == SeverityStage.STAGE_1_2
-        assert SeverityStage.from_density(60.0) == SeverityStage.STAGE_3_4
-        assert SeverityStage.from_density(40.0) == SeverityStage.STAGE_5_6
-        assert SeverityStage.from_density(20.0) == SeverityStage.STAGE_7
+    def test_severity_classification(self) -> None:
+        """Severity diklasifikasikan dengan benar berdasarkan density."""
+        assert Severity.from_density(90.0) == Severity.STAGE_0
+        assert Severity.from_density(75.0) == Severity.STAGE_1
+        assert Severity.from_density(60.0) == Severity.STAGE_3
+        assert Severity.from_density(40.0) == Severity.STAGE_5
+        assert Severity.from_density(20.0) == Severity.STAGE_7
 
 
 class TestHabitLogEntity:

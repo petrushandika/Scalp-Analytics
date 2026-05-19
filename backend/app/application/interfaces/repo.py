@@ -1,6 +1,5 @@
 """
-Interface (Abstract Base Class) untuk repositories.
-Mendefinisikan kontrak yang harus diimplementasikan oleh infrastructure layer.
+Abstract repository interfaces (contracts for the infrastructure layer).
 """
 
 from abc import ABC, abstractmethod

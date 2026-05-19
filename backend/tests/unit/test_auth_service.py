@@ -8,9 +8,9 @@ from uuid import uuid4
 
 import pytest
 
-from app.application.dto.requests import LoginDTO, RegisterUserDTO
-from app.application.services.auth_service import AuthService
-from app.application.services.jwt_service import JWTService
+from app.application.dto.dto import LoginDTO, RegisterUserDTO
+from app.application.services.auth import AuthService
+from app.application.services.jwt import JWTService
 from app.domain.entities.user import User
 
 

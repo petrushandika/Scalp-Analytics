@@ -1,15 +1,15 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 
-import { useAuth } from "@/hooks/useAuth";
-import { registerSchema, type RegisterFormValues } from "@/lib/validations";
-import { getErrorMessage } from "@/lib/utils";
 import { Alert, Button, Input } from "@/components/ui";
+import { useAuth } from "@/hooks/auth";
+import { registerSchema, type RegisterFormValues } from "@/lib/schema";
+import { getErrorMessage } from "@/lib/utils";
 
-export function RegisterForm() {
+export function Register() {
   const { register: registerUser, isRegistering, registerError } = useAuth();
 
   const {

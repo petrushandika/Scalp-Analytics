@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.application.services.jwt_service import JWTService
+from app.application.services.jwt import JWTService
 
 
 @pytest.fixture

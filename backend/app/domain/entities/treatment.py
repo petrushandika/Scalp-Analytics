@@ -5,10 +5,7 @@ from uuid import UUID, uuid4
 
 @dataclass
 class Treatment:
-    """
-    Entity untuk jadwal perawatan rambut pengguna.
-    Misalnya: Minoxidil 1ml, Biotin 5000mcg, dll.
-    """
+    """User treatment schedule (e.g. Minoxidil 1ml, Biotin 5000mcg)."""
 
     id: UUID
     user_id: UUID
@@ -29,7 +26,6 @@ class Treatment:
         dosage: str | None = None,
         description: str | None = None,
     ) -> "Treatment":
-        """Factory method untuk membuat treatment baru."""
         now = datetime.now(UTC)
         return cls(
             id=uuid4(),
@@ -50,7 +46,6 @@ class Treatment:
         dosage: str | None = None,
         description: str | None = None,
     ) -> None:
-        """Update data treatment."""
         if name is not None:
             self.name = name.strip()
         if frequency is not None:
@@ -62,17 +57,13 @@ class Treatment:
         self.updated_at = datetime.now(UTC)
 
     def deactivate(self) -> None:
-        """Nonaktifkan treatment."""
         self.is_active = False
         self.updated_at = datetime.now(UTC)
 
 
 @dataclass
-class TreatmentSchedule:
-    """
-    Entity untuk jadwal spesifik treatment.
-    Menentukan jam dan hari kapan treatment harus dilakukan.
-    """
+class Schedule:
+    """Specific time-based schedule for a treatment."""
 
     id: UUID
     treatment_id: UUID
@@ -88,8 +79,7 @@ class TreatmentSchedule:
         treatment_id: UUID,
         scheduled_time: time,
         days_of_week: list[int],
-    ) -> "TreatmentSchedule":
-        """Factory method untuk membuat schedule baru."""
+    ) -> "Schedule":
         now = datetime.now(UTC)
         return cls(
             id=uuid4(),
@@ -103,10 +93,8 @@ class TreatmentSchedule:
 
 
 @dataclass
-class TreatmentLog:
-    """
-    Entity untuk log penyelesaian treatment harian.
-    """
+class Log:
+    """Daily treatment completion log."""
 
     id: UUID
     schedule_id: UUID
@@ -118,13 +106,7 @@ class TreatmentLog:
     notes: str | None = None
 
     @classmethod
-    def create(
-        cls,
-        schedule_id: UUID,
-        log_date: date,
-        scheduled_time: time,
-    ) -> "TreatmentLog":
-        """Factory method untuk membuat log baru."""
+    def create(cls, schedule_id: UUID, log_date: date, scheduled_time: time) -> "Log":
         return cls(
             id=uuid4(),
             schedule_id=schedule_id,
@@ -134,8 +116,7 @@ class TreatmentLog:
             created_at=datetime.now(UTC),
         )
 
-    def mark_complete(self, notes: str | None = None) -> None:
-        """Tandai treatment sebagai selesai."""
+    def complete(self, notes: str | None = None) -> None:
         self.completed = True
         self.completed_at = datetime.now(UTC)
         if notes:

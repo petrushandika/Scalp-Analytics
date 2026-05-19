@@ -1,16 +1,16 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 
-import { useAuth } from "@/hooks/useAuth";
-import { loginSchema, type LoginFormValues } from "@/lib/validations";
-import { getErrorMessage } from "@/lib/utils";
 import { Alert, Button, Input } from "@/components/ui";
+import { useAuth } from "@/hooks/auth";
+import { loginSchema, type LoginFormValues } from "@/lib/schema";
+import { getErrorMessage } from "@/lib/utils";
 
-export function LoginForm() {
+export function Login() {
   const { login, isLoggingIn, loginError } = useAuth();
   const searchParams = useSearchParams();
   const justRegistered = searchParams.get("registered") === "true";

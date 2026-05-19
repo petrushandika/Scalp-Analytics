@@ -1,4 +1,4 @@
-from app.presentation.routers import auth, users
+from app.presentation.routers import auth, user
 
 
-__all__ = ["auth", "users"]
+__all__ = ["auth", "user"]

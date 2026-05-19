@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { RegisterForm } from "@/components/auth/RegisterForm";
+import { Register } from "@/components/auth/Register";
 
 export const metadata: Metadata = {
   title: "Daftar",
@@ -15,7 +15,7 @@ export default function RegisterPage() {
           Mulai pantau kesehatan rambut Anda dengan AI
         </p>
       </div>
-      <RegisterForm />
+      <Register />
     </div>
   );
 }

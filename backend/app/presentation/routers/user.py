@@ -3,14 +3,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application.dto.requests import UpdateProfileDTO
-from app.application.services.user_service import UserService
+from app.application.dto.dto import UpdateProfileDTO
+from app.application.services.user import UserService
 from app.domain.entities.user import ActivityLevel, Gender
-from app.infrastructure.database.connection import get_db
-from app.infrastructure.repositories.user_repository import UserRepository
-from app.presentation.middleware.auth_middleware import CurrentUser
-from app.presentation.schemas.base_schema import SuccessResponse, success_response
-from app.presentation.schemas.user_schema import (
+from app.infrastructure.database.db import get_db
+from app.infrastructure.repositories.user import UserRepository
+from app.presentation.middleware.auth import CurrentUser
+from app.presentation.schemas.base import SuccessResponse, success_response
+from app.presentation.schemas.user import (
     UpdateProfileRequest,
     UserProfileResponse,
 )

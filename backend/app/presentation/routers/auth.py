@@ -3,14 +3,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application.dto.requests import LoginDTO, RegisterUserDTO
-from app.application.services.auth_service import AuthService
-from app.application.services.jwt_service import JWTService
-from app.infrastructure.database.connection import get_db
-from app.infrastructure.repositories.token_repository import RefreshTokenRepository
-from app.infrastructure.repositories.user_repository import UserRepository
-from app.presentation.middleware.auth_middleware import CurrentUser
-from app.presentation.schemas.auth_schema import (
+from app.application.dto.dto import LoginDTO, RegisterUserDTO
+from app.application.services.auth import AuthService
+from app.application.services.jwt import JWTService
+from app.infrastructure.database.db import get_db
+from app.infrastructure.repositories.token import RefreshTokenRepository
+from app.infrastructure.repositories.user import UserRepository
+from app.presentation.middleware.auth import CurrentUser
+from app.presentation.schemas.auth import (
     LoginRequest,
     LogoutRequest,
     RefreshRequest,
@@ -19,7 +19,7 @@ from app.presentation.schemas.auth_schema import (
     TokenResponse,
     UserResponse,
 )
-from app.presentation.schemas.base_schema import SuccessResponse, success_response
+from app.presentation.schemas.base import SuccessResponse, success_response
 
 
 router = APIRouter()

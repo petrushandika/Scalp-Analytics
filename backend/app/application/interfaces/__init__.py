@@ -1,4 +1,4 @@
-from app.application.interfaces.repositories import (
+from app.application.interfaces.repo import (
     IRefreshTokenRepository,
     IUserRepository,
 )

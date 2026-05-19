@@ -8,11 +8,11 @@ from uuid import uuid4
 
 import pytest
 
-from app.application.services.auth_service import AuthService
-from app.application.services.jwt_service import JWTService
+from app.application.services.auth import AuthService
+from app.application.services.jwt import JWTService
 from app.domain.entities.user import User
-from app.infrastructure.repositories.token_repository import RefreshTokenRepository
-from app.infrastructure.repositories.user_repository import UserRepository
+from app.infrastructure.repositories.token import RefreshTokenRepository
+from app.infrastructure.repositories.user import UserRepository
 
 
 @pytest.fixture

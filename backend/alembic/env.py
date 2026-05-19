@@ -10,7 +10,7 @@ from alembic import context
 from app.infrastructure.database import models  # noqa: F401
 
 # Import models agar terdaftar di metadata
-from app.infrastructure.database.connection import Base
+from app.infrastructure.database.db import Base
 
 
 config = context.config

@@ -1,5 +1,5 @@
 """
-Data Transfer Objects untuk request/response pada application layer.
+Data Transfer Objects for the application layer.
 """
 
 from dataclasses import dataclass

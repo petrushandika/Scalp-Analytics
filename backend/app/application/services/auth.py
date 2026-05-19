@@ -7,11 +7,11 @@ import re
 
 import bcrypt
 
-from app.application.dto.requests import LoginDTO, RegisterUserDTO, TokenPairDTO
-from app.application.services.jwt_service import JWTService
+from app.application.dto.dto import LoginDTO, RegisterUserDTO, TokenPairDTO
+from app.application.services.jwt import JWTService
 from app.domain.entities.user import User
-from app.infrastructure.repositories.token_repository import RefreshTokenRepository
-from app.infrastructure.repositories.user_repository import UserRepository
+from app.infrastructure.repositories.token import RefreshTokenRepository
+from app.infrastructure.repositories.user import UserRepository
 
 
 PASSWORD_PATTERN = re.compile(r"^(?=.*[A-Z])(?=.*\d).{8,}$")

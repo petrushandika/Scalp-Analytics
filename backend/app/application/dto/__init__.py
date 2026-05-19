@@ -1,4 +1,4 @@
-from app.application.dto.requests import (
+from app.application.dto.dto import (
     LoginDTO,
     RegisterUserDTO,
     TokenPairDTO,

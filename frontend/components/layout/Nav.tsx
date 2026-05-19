@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { useAuth } from "@/hooks/useAuth";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui";
+import { useAuth } from "@/hooks/auth";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "🏠" },
@@ -15,7 +15,7 @@ const navItems = [
   { href: "/dashboard/profile", label: "Profil", icon: "👤" },
 ];
 
-export function DashboardNav() {
+export function Nav() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 

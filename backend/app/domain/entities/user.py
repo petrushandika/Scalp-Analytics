@@ -20,10 +20,7 @@ class ActivityLevel(str, Enum):
 
 @dataclass
 class User:
-    """
-    Entity user yang merepresentasikan pengguna terdaftar.
-    Berisi core business logic untuk manajemen user.
-    """
+    """Core user entity with authentication and profile data."""
 
     id: UUID
     email: str
@@ -42,7 +39,6 @@ class User:
 
     @classmethod
     def create(cls, email: str, hashed_password: str, full_name: str) -> "User":
-        """Factory method untuk membuat user baru."""
         now = datetime.now(UTC)
         return cls(
             id=uuid4(),
@@ -65,7 +61,6 @@ class User:
         gender: Gender | None = None,
         activity_level: ActivityLevel | None = None,
     ) -> None:
-        """Update profil user."""
         if full_name is not None:
             self.full_name = full_name.strip()
         if avatar_url is not None:
@@ -83,11 +78,9 @@ class User:
         self.updated_at = datetime.now(UTC)
 
     def deactivate(self) -> None:
-        """Nonaktifkan akun user."""
         self.is_active = False
         self.updated_at = datetime.now(UTC)
 
     def verify_email(self) -> None:
-        """Tandai email user sebagai terverifikasi."""
         self.is_verified = True
         self.updated_at = datetime.now(UTC)

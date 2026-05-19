@@ -1,4 +1,4 @@
-from app.presentation.schemas.auth_schema import (
+from app.presentation.schemas.auth import (
     LoginRequest,
     LogoutRequest,
     RefreshRequest,
@@ -7,13 +7,13 @@ from app.presentation.schemas.auth_schema import (
     TokenResponse,
     UserResponse,
 )
-from app.presentation.schemas.base_schema import (
+from app.presentation.schemas.base import (
     ErrorResponse,
     SuccessResponse,
     error_response,
     success_response,
 )
-from app.presentation.schemas.user_schema import (
+from app.presentation.schemas.user import (
     UpdateProfileRequest,
     UserProfileResponse,
 )

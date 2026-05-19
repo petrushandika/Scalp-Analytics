@@ -4,9 +4,9 @@ Service untuk manajemen profil pengguna.
 
 from uuid import UUID
 
-from app.application.dto.requests import UpdateProfileDTO
+from app.application.dto.dto import UpdateProfileDTO
 from app.domain.entities.user import User
-from app.infrastructure.repositories.user_repository import UserRepository
+from app.infrastructure.repositories.user import UserRepository
 
 
 class UserService:
