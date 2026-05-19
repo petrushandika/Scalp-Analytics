@@ -48,6 +48,7 @@ guides/
 
 # Storage
 Backend/storage/
+Documentation/datasets/
 
 # Alembic
 Backend/alembic/versions/*.py
