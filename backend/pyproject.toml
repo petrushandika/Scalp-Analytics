@@ -46,6 +46,8 @@ ignore = [
     "ARG001",  # unused function argument (often needed in FastAPI)
     "ARG002",  # unused method argument
     "UP007",   # use | instead of Union (for Python 3.9 compatibility)
+    "UP046",   # Generic subclass syntax (keep compatible style with Pydantic)
+    "TC003",   # move stdlib import into TYPE_CHECKING (can break runtime)
 ]
 
 [tool.ruff.lint.isort]
@@ -84,6 +86,7 @@ module = [
     "keras.*",
     "numpy.*",
     "scipy.*",
+    "bcrypt.*",
 ]
 ignore_missing_imports = true
 
