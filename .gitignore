@@ -49,6 +49,8 @@ guides/
 # Storage
 Backend/storage/
 Documentation/datasets/
+Backend/app/infrastructure/ai/models/*.onnx
+Backend/app/infrastructure/ai/models/*.h5
 
 # Alembic
 Backend/alembic/versions/*.py

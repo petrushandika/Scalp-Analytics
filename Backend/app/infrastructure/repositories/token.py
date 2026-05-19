@@ -5,10 +5,10 @@ from uuid import UUID
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.infrastructure.database.models import ResetModel as PasswordResetModel
+from app.infrastructure.database.models import TokenModel as RefreshTokenModel
 from app.infrastructure.database.models import (
-    EmailVerificationModel,
-    PasswordResetModel,
-    RefreshTokenModel,
+    VerificationModel as EmailVerificationModel,
 )
 
 

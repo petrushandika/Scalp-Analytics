@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.infrastructure.database.db import create_tables, dispose_engine
 from app.presentation.middleware.error import register_exception_handlers
-from app.presentation.routers import auth, user
+from app.presentation.routers import auth, photo, user
 
 
 @asynccontextmanager
@@ -43,6 +43,7 @@ def create_app() -> FastAPI:
 
     app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
     app.include_router(user.router, prefix="/api/users", tags=["Users"])
+    app.include_router(photo.router, prefix="/api/photos", tags=["Photos"])
 
     @app.get("/health", tags=["Health"])
     async def health_check() -> dict[str, str]:
