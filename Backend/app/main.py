@@ -7,7 +7,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.infrastructure.database.db import create_tables, dispose_engine
 from app.presentation.middleware.error import register_exception_handlers
-from app.presentation.routers import analytics, auth, habit, photo, treatment, user
+from app.presentation.routers import (
+    analytics,
+    auth,
+    habit,
+    nutrition,
+    photo,
+    treatment,
+    user,
+)
 
 
 @asynccontextmanager
@@ -47,6 +55,7 @@ def create_app() -> FastAPI:
     app.include_router(habit.router, prefix="/api/habits", tags=["Habits"])
     app.include_router(treatment.router, prefix="/api/treatments", tags=["Treatments"])
     app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
+    app.include_router(nutrition.router, prefix="/api/nutrition", tags=["Nutrition"])
 
     @app.get("/health", tags=["Health"])
     async def health_check() -> dict[str, str]:
