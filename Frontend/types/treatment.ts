@@ -1,14 +1,12 @@
-export type TreatmentCategory = "topical" | "supplement" | "lifestyle" | "medical";
+export type TreatmentFrequency = "daily" | "weekly" | "custom";
 
 export interface Treatment {
   id: string;
   user_id: string;
   name: string;
-  category: TreatmentCategory;
-  frequency: string;
-  start_date: string;
-  end_date: string | null;
-  notes: string | null;
+  frequency: TreatmentFrequency;
+  dosage: string | null;
+  description: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -16,10 +14,7 @@ export interface Treatment {
 
 export interface CreateTreatmentRequest {
   name: string;
-  category: TreatmentCategory;
-  frequency: string;
-  start_date: string;
-  end_date?: string;
-  notes?: string;
-  is_active?: boolean;
+  frequency: TreatmentFrequency;
+  dosage?: string;
+  description?: string;
 }

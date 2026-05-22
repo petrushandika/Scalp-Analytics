@@ -1,9 +1,11 @@
 "use client";
 
-import { Minus, Plus, Search, Trash2, UtensilsCrossed } from "lucide-react";
-import { useState } from "react";
+import { Camera, Minus, Plus, Search, Trash2, UtensilsCrossed, X } from "lucide-react";
+import Image from "next/image";
+import { useRef, useState } from "react";
 
 import { Button, Card } from "@/components/ui";
+import { CameraCapture } from "@/components/ui/CameraCapture";
 import {
   useCreateMeal,
   useDeleteMeal,
@@ -19,11 +21,24 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
-const MEAL_TYPES: { value: MealType; label: string; emoji: string }[] = [
-  { value: "breakfast", label: "Sarapan", emoji: "🌅" },
-  { value: "lunch", label: "Makan Siang", emoji: "☀️" },
-  { value: "dinner", label: "Makan Malam", emoji: "🌙" },
-  { value: "snack", label: "Camilan", emoji: "🍎" },
+function nowTimeStr() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+}
+
+function getDefaultMealType(): MealType {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 10) return "breakfast";
+  if (hour >= 10 && hour < 14) return "lunch";
+  if (hour >= 14 && hour < 19) return "snack";
+  return "dinner";
+}
+
+const MEAL_TYPES: { value: MealType; label: string; emoji: string; timeHint: string }[] = [
+  { value: "breakfast", label: "Sarapan", emoji: "🌅", timeHint: "05.00–10.00" },
+  { value: "lunch", label: "Makan Siang", emoji: "☀️", timeHint: "10.00–14.00" },
+  { value: "snack", label: "Camilan", emoji: "🍎", timeHint: "14.00–19.00" },
+  { value: "dinner", label: "Makan Malam", emoji: "🌙", timeHint: "19.00–05.00" },
 ];
 
 const WATER_GOAL = 2000;
@@ -73,11 +88,14 @@ export function NutritionClient() {
   const [foodQuery, setFoodQuery] = useState("");
   const { data: foods } = useSearchFoods(foodQuery);
 
-  const [mealType, setMealType] = useState<MealType>("breakfast");
+  const [mealType, setMealType] = useState<MealType>(getDefaultMealType);
   const [mealItems, setMealItems] = useState<
     { food_id: string; food_name: string; quantity_grams: number }[]
   >([]);
+  const [mealPhoto, setMealPhoto] = useState<File | null>(null);
+  const [showFoodCamera, setShowFoodCamera] = useState(false);
   const [mealError, setMealError] = useState("");
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   function addFood(foodId: string, foodName: string) {
     setMealItems((prev) => {
@@ -102,15 +120,22 @@ export function NutritionClient() {
   }
 
   async function handleCreateMeal() {
-    if (!mealItems.length) return;
+    if (!mealItems.length && !mealPhoto) return;
     setMealError("");
     try {
       await createMealMutation.mutateAsync({
         log_date: today,
+        log_time: nowTimeStr(),
         meal_type: mealType,
-        items: mealItems.map(({ food_id, quantity_grams }) => ({ food_id, quantity_grams })),
+        items: mealItems.map(({ food_id, quantity_grams }) => ({
+          food_id,
+          quantity: quantity_grams,
+          unit: "g" as const,
+          serving_multiplier: 1,
+        })),
       });
       setMealItems([]);
+      setMealPhoto(null);
     } catch (err) {
       setMealError(getErrorMessage(err));
     }
@@ -128,7 +153,26 @@ export function NutritionClient() {
     meals: meals?.filter((m) => m.meal_type === mt.value) ?? [],
   })).filter((g) => g.meals.length > 0);
 
+  const currentMealTypeInfo = MEAL_TYPES.find((m) => m.value === mealType)!;
+
   return (
+    <>
+      {showFoodCamera && (
+        <CameraCapture
+          direction={{
+            label: `Foto ${currentMealTypeInfo.label}`,
+            instruction: `Arahkan kamera ke makanan ${currentMealTypeInfo.label.toLowerCase()} Anda`,
+            icon: currentMealTypeInfo.emoji,
+            arrow: "center",
+          }}
+          onCapture={(file) => {
+            setMealPhoto(file);
+            setMealType(getDefaultMealType());
+            setShowFoodCamera(false);
+          }}
+          onClose={() => setShowFoodCamera(false)}
+        />
+      )}
     <div className="space-y-8">
       {/* Page header */}
       <div>
@@ -179,25 +223,38 @@ export function NutritionClient() {
 
       {/* Meal logger */}
       <Card>
-        <h2 className="mb-5 font-semibold text-slate-900">Catat Makanan</h2>
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-semibold text-slate-900">Catat Makanan</h2>
+          <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700">
+            {MEAL_TYPES.find((m) => m.value === mealType)?.emoji}{" "}
+            {MEAL_TYPES.find((m) => m.value === mealType)?.label} (otomatis)
+          </span>
+        </div>
         <div className="space-y-4">
-          {/* Meal type as pill tabs */}
+          {/* Meal type as elegant grid tabs */}
           <div>
             <p className="mb-2 text-sm font-medium text-slate-700">Waktu Makan</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {MEAL_TYPES.map((mt) => (
                 <button
                   key={mt.value}
                   type="button"
                   onClick={() => setMealType(mt.value)}
-                  className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
+                  className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3.5 text-center transition-all duration-200 ${
                     mealType === mt.value
-                      ? "bg-primary-600 text-white shadow-sm"
-                      : "border border-slate-200 text-slate-600 hover:border-primary-300 hover:bg-primary-50"
+                      ? "border-primary-600 bg-primary-600 text-white shadow-md shadow-primary-600/10"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-primary-300 hover:bg-primary-50/20"
                   }`}
                 >
-                  <span>{mt.emoji}</span>
-                  {mt.label}
+                  <span className="text-xl">{mt.emoji}</span>
+                  <span className="text-xs font-semibold">{mt.label}</span>
+                  <span
+                    className={`text-[10px] ${
+                      mealType === mt.value ? "text-primary-100" : "text-slate-400"
+                    }`}
+                  >
+                    {mt.timeHint}
+                  </span>
                 </button>
               ))}
             </div>
@@ -226,7 +283,7 @@ export function NutritionClient() {
                   >
                     <span className="font-medium text-slate-800">{food.name}</span>
                     <span className="text-xs text-slate-400">
-                      {food.calories_per_100g} kcal/100g
+                      {food.default_serving}{food.default_unit}
                     </span>
                   </button>
                 ))}
@@ -278,11 +335,78 @@ export function NutritionClient() {
             </div>
           )}
 
+          {/* Food photo */}
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-700">Foto Makanan (opsional)</p>
+            {mealPhoto ? (
+              <div className="relative overflow-hidden rounded-xl">
+                <Image
+                  src={URL.createObjectURL(mealPhoto)}
+                  alt="Foto makanan"
+                  width={400}
+                  height={200}
+                  className="w-full object-cover"
+                  unoptimized
+                />
+                <button
+                  type="button"
+                  onClick={() => setMealPhoto(null)}
+                  className="absolute right-2 top-2 rounded-full bg-black/50 p-1.5 text-white hover:bg-black/70"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+                <div className="absolute bottom-2 left-2 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                  {MEAL_TYPES.find((m) => m.value === mealType)?.emoji}{" "}
+                  {MEAL_TYPES.find((m) => m.value === mealType)?.label}
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowFoodCamera(true)}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary-600 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
+                >
+                  <Camera className="h-4 w-4" /> Foto Makanan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  <Plus className="h-4 w-4" /> Upload
+                </button>
+              </div>
+            )}
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) setMealPhoto(f);
+                e.target.value = "";
+              }}
+            />
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) setMealPhoto(f);
+                e.target.value = "";
+              }}
+            />
+          </div>
+
           {mealError && <p className="text-sm text-red-500">{mealError}</p>}
 
           <Button
             onClick={handleCreateMeal}
-            disabled={mealItems.length === 0}
+            disabled={mealItems.length === 0 && !mealPhoto}
             isLoading={createMealMutation.isPending}
             className="w-full"
           >
@@ -322,12 +446,12 @@ export function NutritionClient() {
                             {meal.items.length} item makanan
                           </p>
                           <div className="mt-1 flex flex-wrap gap-1">
-                            {meal.items.map((item, idx) => (
+                            {meal.items.map((_item, idx) => (
                               <span
                                 key={idx}
                                 className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600"
                               >
-                                {item.food?.name ?? `Item ${idx + 1}`}
+                                {`Item ${idx + 1}`}
                               </span>
                             ))}
                           </div>
@@ -350,5 +474,6 @@ export function NutritionClient() {
         )}
       </div>
     </div>
+    </>
   );
 }

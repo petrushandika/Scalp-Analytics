@@ -18,6 +18,7 @@ export function useAuth() {
     data: user,
     isLoading,
     isError,
+    refetch: refreshUser,
   } = useQuery({
     queryKey: CURRENT_USER_KEY,
     queryFn: () => usersApi.getProfile() as Promise<User>,
@@ -67,5 +68,6 @@ export function useAuth() {
     isRegistering: registerMutation.isPending,
     registerError: registerMutation.error,
     logout,
+    refreshUser,
   };
 }

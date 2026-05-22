@@ -3,31 +3,45 @@ export type MealType = "breakfast" | "lunch" | "dinner" | "snack";
 export interface Food {
   id: string;
   name: string;
-  calories_per_100g: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
+  category: string;
+  brand: string | null;
+  default_serving: number;
+  default_unit: string;
+  is_verified: boolean;
 }
 
 export interface MealItem {
+  id: string;
   food_id: string;
-  quantity_grams: number;
-  food?: Food;
+  quantity: number;
+  unit: string;
+  serving_multiplier: number;
 }
 
 export interface Meal {
   id: string;
   user_id: string;
   log_date: string;
+  log_time: string;
   meal_type: MealType;
+  notes: string | null;
   items: MealItem[];
   created_at: string;
 }
 
+export interface MealItemRequest {
+  food_id: string;
+  quantity: number;
+  unit: string;
+  serving_multiplier?: number;
+}
+
 export interface CreateMealRequest {
   log_date: string;
+  log_time: string;
   meal_type: MealType;
-  items: { food_id: string; quantity_grams: number }[];
+  notes?: string;
+  items: MealItemRequest[];
 }
 
 export interface WaterLog {

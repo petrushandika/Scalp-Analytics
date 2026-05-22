@@ -51,10 +51,16 @@ def create_app() -> FastAPI:
 
     register_exception_handlers(app)
 
-    # Serve uploaded photos
+    # Serve uploaded files
     uploads_dir = Path(settings.storage_path) / "uploads"
     uploads_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
+
+    avatars_dir = Path(settings.storage_path) / "avatars"
+    avatars_dir.mkdir(parents=True, exist_ok=True)
+    app.mount(
+        "/storage/avatars", StaticFiles(directory=str(avatars_dir)), name="avatars"
+    )
 
     app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
     app.include_router(user.router, prefix="/api/users", tags=["Users"])

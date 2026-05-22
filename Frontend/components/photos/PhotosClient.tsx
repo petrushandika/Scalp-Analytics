@@ -1,21 +1,63 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, ImageOff, Trash2, UploadCloud, Zap } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpCircle,
+  Camera,
+  CheckCircle2,
+  ImageOff,
+  RotateCcw,
+  Trash2,
+  Zap,
+} from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 
-import { Badge, Button, Card } from "@/components/ui";
+import { Badge, Button, Card, CameraCapture } from "@/components/ui";
 import { useAnalyzePhoto, useDeletePhoto, usePhotos, useUploadPhoto } from "@/hooks/photo";
 import { formatDate } from "@/lib/utils";
 import type { AnalyzeResult, PhotoAngle } from "@/types/photo";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-const ANGLES: { value: PhotoAngle; label: string }[] = [
-  { value: "front", label: "Depan" },
-  { value: "top", label: "Atas" },
-  { value: "right", label: "Kanan" },
-  { value: "left", label: "Kiri" },
+const ANGLE_STEPS: {
+  value: PhotoAngle;
+  label: string;
+  instruction: string;
+  tip: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
+  {
+    value: "front",
+    label: "Depan",
+    instruction: "Foto bagian depan kepala",
+    tip: "Hadap kamera langsung, rambut terlihat jelas dari garis rambut ke depan",
+    icon: ArrowUp,
+  },
+  {
+    value: "top",
+    label: "Atas",
+    instruction: "Foto bagian atas kepala",
+    tip: "Arahkan kamera tegak lurus ke bawah dari atas kepala, tampak mahkota kepala",
+    icon: ArrowUpCircle,
+  },
+  {
+    value: "right",
+    label: "Kanan",
+    instruction: "Foto bagian sisi kanan",
+    tip: "Putar kepala ke kiri agar sisi kanan terlihat jelas oleh kamera",
+    icon: ArrowRight,
+  },
+  {
+    value: "left",
+    label: "Kiri",
+    instruction: "Foto bagian sisi kiri",
+    tip: "Putar kepala ke kanan agar sisi kiri terlihat jelas oleh kamera",
+    icon: ArrowLeft,
+  },
 ];
 
 function severityAlertClass(stage: string | null | undefined) {
@@ -35,27 +77,43 @@ function confidenceBarColor(confidence: number) {
 export function PhotosClient() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const analyzeInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [angle, setAngle] = useState<PhotoAngle>("front");
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const [stepIndex, setStepIndex] = useState(0);
+  const [stepFiles, setStepFiles] = useState<(File | null)[]>([null, null, null, null]);
+  const [uploadedSteps, setUploadedSteps] = useState<boolean[]>([false, false, false, false]);
   const [analyzeResult, setAnalyzeResult] = useState<AnalyzeResult | null>(null);
-  const [dragOver, setDragOver] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
 
   const { data: photos, isLoading } = usePhotos();
   const uploadMutation = useUploadPhoto();
   const analyzeMutation = useAnalyzePhoto();
   const deleteMutation = useDeletePhoto();
 
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file?.type.startsWith("image/")) setSelectedFile(file);
+  // stepIndex is always 0-3, ANGLE_STEPS has 4 elements
+  const currentStep = ANGLE_STEPS[stepIndex]!;
+  const currentFile = stepFiles[stepIndex];
+
+  function setFileForStep(file: File) {
+    setStepFiles((prev) => {
+      const next = [...prev];
+      next[stepIndex] = file;
+      return next;
+    });
   }
 
-  async function handleUpload() {
-    if (!selectedFile) return;
-    await uploadMutation.mutateAsync({ file: selectedFile, angle });
-    setSelectedFile(null);
+  async function handleUploadStep() {
+    const file = stepFiles[stepIndex];
+    if (!file) return;
+    await uploadMutation.mutateAsync({ file, angle: currentStep.value });
+    setUploadedSteps((prev) => {
+      const next = [...prev];
+      next[stepIndex] = true;
+      return next;
+    });
+    if (stepIndex < ANGLE_STEPS.length - 1) {
+      setStepIndex(stepIndex + 1);
+    }
   }
 
   async function handleAnalyze(e: React.ChangeEvent<HTMLInputElement>) {
@@ -66,146 +124,245 @@ export function PhotosClient() {
     e.target.value = "";
   }
 
+  function resetWizard() {
+    setStepIndex(0);
+    setStepFiles([null, null, null, null]);
+    setUploadedSteps([false, false, false, false]);
+  }
+
+  const completedCount = uploadedSteps.filter(Boolean).length;
+
   return (
+    <>
+      {showCamera && (
+        <CameraCapture
+          direction={{
+            label: currentStep.label,
+            instruction: currentStep.tip,
+            icon: currentStep.icon,
+            arrow:
+              currentStep.value === "front"
+                ? "up"
+                : currentStep.value === "top"
+                  ? "center"
+                  : currentStep.value === "right"
+                    ? "right"
+                    : "left",
+          }}
+          onCapture={(file) => {
+            setFileForStep(file);
+            setShowCamera(false);
+          }}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
     <div className="space-y-8">
       {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Foto &amp; Analisis</h1>
-        <p className="mt-1 text-sm text-slate-500">Upload foto kulit kepala untuk dianalisis AI</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Foto kulit kepala dari 4 sudut untuk analisis AI yang akurat
+        </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* ── Upload & Analisis ── */}
-        <Card className="flex flex-col gap-5">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100">
-              <UploadCloud className="h-5 w-5 text-primary-600" />
+        {/* ── Guided photo wizard ── */}
+        <div className="flex flex-col gap-4">
+          {/* Progress indicator */}
+          <Card className="p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-700">Progress Pengambilan Foto</p>
+              <span className="text-xs text-slate-500">{completedCount}/4 sudut</span>
             </div>
-            <div>
-              <h2 className="font-semibold text-slate-900">Upload &amp; Analisis</h2>
-              <p className="text-xs text-slate-500">Simpan foto ke riwayat</p>
+            <div className="flex gap-2">
+              {ANGLE_STEPS.map((step, i) => (
+                <button
+                  key={step.value}
+                  onClick={() => setStepIndex(i)}
+                  className={`flex flex-1 flex-col items-center gap-1.5 rounded-xl py-2.5 text-xs font-medium transition-all ${
+                    i === stepIndex
+                      ? "bg-primary-600 text-white shadow-sm"
+                      : uploadedSteps[i]
+                        ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                        : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                  }`}
+                >
+                  <step.icon className="h-4.5 w-4.5 shrink-0" />
+                  {step.label}
+                  {uploadedSteps[i] && <CheckCircle2 className="h-3 w-3 mt-0.5" />}
+                </button>
+              ))}
             </div>
-          </div>
+          </Card>
 
-          {/* Drop zone */}
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label="Upload foto"
-            className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-10 text-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500/40 ${
-              dragOver
-                ? "border-primary-400 bg-primary-50"
-                : selectedFile
-                  ? "border-primary-300 bg-primary-50/60"
-                  : "border-slate-200 hover:border-primary-300 hover:bg-slate-50"
-            }`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
-          >
-            <div
-              className={`flex h-16 w-16 items-center justify-center rounded-full transition-colors ${
-                selectedFile ? "bg-primary-100" : "bg-slate-100"
-              }`}
-            >
-              <UploadCloud
-                className={`h-7 w-7 transition-colors ${selectedFile ? "text-primary-600" : "text-slate-400"}`}
-              />
-            </div>
-            {selectedFile ? (
+          {/* Current step */}
+          <Card className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+                <currentStep.icon className="h-5 w-5" />
+              </div>
               <div>
-                <p className="text-sm font-semibold text-primary-700">{selectedFile.name}</p>
-                <p className="mt-0.5 text-xs text-slate-500">Klik untuk ganti foto</p>
+                <p className="font-semibold text-slate-900">
+                  Langkah {stepIndex + 1}: {currentStep.instruction}
+                </p>
+                <p className="text-xs text-slate-500">{currentStep.tip}</p>
+              </div>
+            </div>
+
+            {/* Upload area */}
+            {currentFile ? (
+              <div className="relative overflow-hidden rounded-xl">
+                <Image
+                  src={URL.createObjectURL(currentFile)}
+                  alt="Preview"
+                  width={400}
+                  height={280}
+                  className="w-full object-cover"
+                  unoptimized
+                />
+                <button
+                  onClick={() =>
+                    setStepFiles((prev) => {
+                      const next = [...prev];
+                      next[stepIndex] = null;
+                      return next;
+                    })
+                  }
+                  className="absolute right-2 top-2 rounded-full bg-black/50 p-1.5 text-white hover:bg-black/70"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </button>
               </div>
             ) : (
-              <div>
-                <p className="text-sm font-semibold text-slate-700">
-                  Klik atau seret foto ke sini
-                </p>
-                <p className="mt-0.5 text-xs text-slate-400">PNG, JPG, WEBP hingga 10MB</p>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
+                className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 py-10 text-center transition-all hover:border-primary-300 hover:bg-primary-50/30 focus:outline-none"
+              >
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                  <Camera className="h-6 w-6 text-slate-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Upload atau ambil foto</p>
+                  <p className="mt-0.5 text-xs text-slate-400">PNG, JPG hingga 10MB</p>
+                </div>
               </div>
             )}
+
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) setFileForStep(f);
+                e.target.value = "";
+              }}
             />
-          </div>
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) setFileForStep(f);
+                e.target.value = "";
+              }}
+            />
 
-          {/* Angle selector as pill buttons */}
-          <div>
-            <p className="mb-2 text-sm font-medium text-slate-700">Sudut Foto</p>
+            {/* Action buttons */}
             <div className="flex gap-2">
-              {ANGLES.map((a) => (
-                <button
-                  key={a.value}
-                  type="button"
-                  onClick={() => setAngle(a.value)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
-                    angle === a.value
-                      ? "bg-primary-600 text-white shadow-sm"
-                      : "border border-slate-200 text-slate-600 hover:border-primary-300 hover:bg-primary-50"
-                  }`}
-                >
-                  {a.label}
-                </button>
-              ))}
+              <Button
+                variant="outline"
+                onClick={() => setShowCamera(true)}
+                className="flex-1"
+              >
+                <Camera className="h-4 w-4" />
+                Kamera
+              </Button>
+              <Button
+                onClick={handleUploadStep}
+                disabled={!currentFile || uploadedSteps[stepIndex]}
+                isLoading={uploadMutation.isPending}
+                className="flex-1"
+              >
+                {uploadedSteps[stepIndex] ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" /> Tersimpan
+                  </>
+                ) : (
+                  <>Upload &amp; Analisis</>
+                )}
+              </Button>
             </div>
-          </div>
 
-          <Button
-            onClick={handleUpload}
-            disabled={!selectedFile}
-            isLoading={uploadMutation.isPending}
-            className="w-full"
-          >
-            <UploadCloud className="h-4 w-4" />
-            Upload &amp; Analisis
-          </Button>
+            {/* Navigation */}
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+              <button
+                onClick={() => setStepIndex(Math.max(0, stepIndex - 1))}
+                disabled={stepIndex === 0}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-slate-500 hover:bg-slate-50 disabled:opacity-30"
+              >
+                <ArrowLeft className="h-4 w-4" /> Sebelumnya
+              </button>
+              {completedCount === 4 ? (
+                <button
+                  onClick={resetWizard}
+                  className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
+                >
+                  <RotateCcw className="h-4 w-4" /> Sesi Baru
+                </button>
+              ) : (
+                <button
+                  onClick={() => setStepIndex(Math.min(3, stepIndex + 1))}
+                  disabled={stepIndex === 3}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-slate-500 hover:bg-slate-50 disabled:opacity-30"
+                >
+                  Lewati <ArrowRight className="h-4 w-4" />
+                </button>
+              )}
+            </div>
 
-          {/* Upload result */}
-          {uploadMutation.data && (
-            <div
-              className={`rounded-xl border p-4 ${severityAlertClass(uploadMutation.data.severity_stage)}`}
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 shrink-0" />
-                <p className="text-xs font-semibold uppercase tracking-wide">Hasil Analisis</p>
-              </div>
-              <div className="mb-3 flex items-center gap-3">
+            {/* Upload result */}
+            {uploadMutation.data && uploadedSteps[stepIndex] && (
+              <div
+                className={`rounded-xl border p-3 ${severityAlertClass(uploadMutation.data.severity_stage)}`}
+              >
+                <div className="mb-1.5 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <p className="text-xs font-semibold uppercase tracking-wide">Hasil Analisis</p>
+                </div>
                 {uploadMutation.data.severity_stage && (
                   <Badge stage={uploadMutation.data.severity_stage} />
                 )}
+                {uploadMutation.data.confidence != null && (
+                  <div className="mt-2">
+                    <div className="mb-1 flex justify-between text-xs">
+                      <span>Confidence</span>
+                      <span className="font-semibold">
+                        {(uploadMutation.data.confidence * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-black/10">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${confidenceBarColor(uploadMutation.data.confidence)}`}
+                        style={{ width: `${(uploadMutation.data.confidence * 100).toFixed(1)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {uploadMutation.data.recommendation && (
+                  <p className="mt-2 text-sm">{uploadMutation.data.recommendation}</p>
+                )}
               </div>
-              {uploadMutation.data.confidence != null && (
-                <div className="mb-3">
-                  <div className="mb-1 flex justify-between text-xs">
-                    <span>Confidence</span>
-                    <span className="font-semibold">
-                      {(uploadMutation.data.confidence * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-black/10">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${confidenceBarColor(uploadMutation.data.confidence)}`}
-                      style={{ width: `${(uploadMutation.data.confidence * 100).toFixed(1)}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-              {uploadMutation.data.recommendation && (
-                <p className="text-sm">{uploadMutation.data.recommendation}</p>
-              )}
-            </div>
-          )}
-        </Card>
+            )}
+          </Card>
+        </div>
 
         {/* ── Quick Analyze ── */}
         <Card className="flex flex-col gap-5">
@@ -220,15 +377,15 @@ export function PhotosClient() {
           </div>
 
           <div className="flex flex-1 flex-col justify-between gap-5">
-            <div className="flex flex-col gap-3">
+            <div className="flex gap-2">
               <Button
                 variant="outline"
                 onClick={() => analyzeInputRef.current?.click()}
                 isLoading={analyzeMutation.isPending}
-                className="w-full"
+                className="flex-1"
               >
                 <Zap className="h-4 w-4" />
-                Pilih Foto untuk Analisis
+                Upload Foto
               </Button>
               <input
                 ref={analyzeInputRef}
@@ -237,12 +394,9 @@ export function PhotosClient() {
                 className="hidden"
                 onChange={handleAnalyze}
               />
-              <p className="text-center text-xs text-slate-400">
-                Foto tidak akan disimpan ke server
-              </p>
             </div>
 
-            {analyzeResult && (
+            {analyzeResult ? (
               <div
                 className={`rounded-xl border p-4 ${severityAlertClass(analyzeResult.severity_stage)}`}
               >
@@ -250,10 +404,8 @@ export function PhotosClient() {
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <p className="text-xs font-semibold uppercase tracking-wide">Hasil Analisis</p>
                 </div>
-                <div className="mb-3 flex items-center gap-3">
-                  <Badge stage={analyzeResult.severity_stage} />
-                </div>
-                <div className="mb-3">
+                <Badge stage={analyzeResult.severity_stage} />
+                <div className="mt-3">
                   <div className="mb-1 flex justify-between text-xs">
                     <span>Confidence</span>
                     <span className="font-semibold">
@@ -267,20 +419,16 @@ export function PhotosClient() {
                     />
                   </div>
                 </div>
-                <p className="text-sm">{analyzeResult.recommendation}</p>
+                <p className="mt-3 text-sm">{analyzeResult.recommendation}</p>
               </div>
-            )}
-
-            {!analyzeResult && !analyzeMutation.isPending && (
+            ) : (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-slate-50 py-10 text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
                   <Zap className="h-6 w-6 text-amber-500" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-600">Siap menganalisis</p>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    Pilih foto untuk mendapatkan hasil instan
-                  </p>
+                  <p className="mt-0.5 text-xs text-slate-400">Pilih foto untuk hasil instan</p>
                 </div>
               </div>
             )}
@@ -314,9 +462,7 @@ export function PhotosClient() {
             </div>
             <div>
               <p className="font-medium text-slate-600">Belum ada foto</p>
-              <p className="mt-1 text-sm text-slate-400">
-                Upload foto pertama Anda untuk mulai analisis
-              </p>
+              <p className="mt-1 text-sm text-slate-400">Upload foto pertama untuk mulai analisis</p>
             </div>
           </div>
         ) : (
@@ -334,7 +480,6 @@ export function PhotosClient() {
                   className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   unoptimized
                 />
-                {/* Overlay on hover */}
                 <div className="absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-black/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                   <div className="flex justify-end">
                     <button
@@ -360,5 +505,6 @@ export function PhotosClient() {
         )}
       </div>
     </div>
+    </>
   );
 }

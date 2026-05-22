@@ -268,9 +268,13 @@ class HabitModel(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "log_date", name="unique_user_date"),
         CheckConstraint(
-            "stress_level >= 1 AND stress_level <= 10", name="stress_range"
+            "stress_level IS NULL OR (stress_level >= 1 AND stress_level <= 10)",
+            name="stress_range",
         ),
-        CheckConstraint("sleep_hours >= 0 AND sleep_hours <= 24", name="sleep_range"),
+        CheckConstraint(
+            "sleep_hours IS NULL OR (sleep_hours >= 0 AND sleep_hours <= 24)",
+            name="sleep_range",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -283,8 +287,10 @@ class HabitModel(Base):
         index=True,
     )
     log_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
-    stress_level: Mapped[int] = mapped_column(Integer, nullable=False)
-    sleep_hours: Mapped[float] = mapped_column(Numeric(3, 1), nullable=False)
+    stress_level: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    sleep_hours: Mapped[float | None] = mapped_column(Numeric(3, 1), nullable=True)
+    activity: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    activity_duration_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False

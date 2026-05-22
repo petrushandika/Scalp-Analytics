@@ -144,6 +144,13 @@ export const usersApi = {
 
   updateProfile: (payload: object) => request<object>("put", "/api/users/me", payload),
 
+  uploadAvatar: (formData: FormData) =>
+    apiClient
+      .post<ApiSuccessResponse<object>>("/api/users/avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data.data),
+
   deleteAccount: () => apiClient.delete("/api/users/me"),
 };
 

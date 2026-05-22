@@ -4,8 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --radius: 0.75rem;
   }
 
   html {
@@ -13,86 +12,84 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   body {
-    @apply bg-slate-50 text-gray-900 antialiased;
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-synthesis: none;
   }
 
   /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply rounded-full bg-slate-200; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-slate-300; }
 
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
+  /* Focus ring reset */
+  *:focus { outline: none; }
+  *:focus-visible { @apply ring-2 ring-primary-500 ring-offset-2; }
 
-  ::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-slate-300;
-    transition: background-color 0.2s ease;
-  }
+  /* Smooth links and buttons */
+  a, button { transition: all 0.15s ease; }
+}
 
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400;
+@layer utilities {
+  .glass {
+    backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(255, 255, 255, 0.75);
   }
+  .glass-dark {
+    backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(15, 23, 42, 0.8);
+  }
+  .gradient-mesh {
+    background-image:
+      radial-gradient(at 20% 50%, rgba(13, 148, 136, 0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 10%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
+      radial-gradient(at 50% 80%, rgba(99, 102, 241, 0.08) 0px, transparent 50%);
+  }
+  .text-gradient {
+    @apply bg-gradient-to-br from-primary-600 to-primary-800 bg-clip-text text-transparent;
+  }
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
+  }
+}
 
-  /* Range slider — stress slider */
-  input[type="range"].stress-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 6px;
-    border-radius: 9999px;
-    background: linear-gradient(
-      to right,
-      #10b981 0%,
-      #f59e0b 50%,
-      #ef4444 100%
-    );
-    outline: none;
-    cursor: pointer;
-  }
-
-  input[type="range"].stress-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 2px solid #0d9488;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  input[type="range"].stress-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.15);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-
-  input[type="range"].stress-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 2px solid #0d9488;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
-    transition: transform 0.15s ease;
-  }
-
-  input[type="range"].stress-slider::-moz-range-thumb:hover {
-    transform: scale(1.15);
-  }
-
-  /* Smooth transitions for interactive elements */
-  button,
-  a {
-    transition-property: color, background-color, border-color, opacity, box-shadow, transform;
-    transition-duration: 150ms;
-    transition-timing-function: ease;
-  }
+/* Range slider — stress slider */
+input[type="range"].stress-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"].stress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2.5px solid #0d9488;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+input[type="range"].stress-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+input[type="range"].stress-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2.5px solid #0d9488;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
 }

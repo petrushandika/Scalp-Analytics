@@ -58,71 +58,64 @@ export function Register() {
         {...register("email")}
       />
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-sm font-medium text-slate-700">
-          Password <span className="text-red-500">*</span>
-        </label>
-        <div className="relative">
-          <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="Min. 8 karakter, 1 huruf kapital, 1 angka"
-            autoComplete="new-password"
-            className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-150 hover:border-slate-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
-            {...register("password")}
-          />
+      <Input
+        label="Password"
+        type={showPassword ? "text" : "password"}
+        placeholder="Min. 8 karakter, 1 huruf kapital, 1 angka"
+        autoComplete="new-password"
+        required
+        leftIcon={<Lock className="h-4 w-4" />}
+        rightElement={
           <button
             type="button"
             tabIndex={-1}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="text-slate-400 hover:text-slate-600 transition-colors"
             onClick={() => setShowPassword((s) => !s)}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
-        </div>
-        {errors.password?.message && (
-          <p className="text-xs text-red-500">{errors.password.message}</p>
-        )}
-      </div>
+        }
+        error={errors.password?.message}
+        hint="Minimal 8 karakter, mengandung huruf kapital dan angka"
+        {...register("password")}
+      />
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="confirm_password" className="text-sm font-medium text-slate-700">
-          Konfirmasi Password <span className="text-red-500">*</span>
-        </label>
-        <div className="relative">
-          <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            id="confirm_password"
-            type={showConfirm ? "text" : "password"}
-            placeholder="Ulangi password Anda"
-            autoComplete="new-password"
-            className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-150 hover:border-slate-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
-            {...register("confirm_password")}
-          />
+      <Input
+        label="Konfirmasi Password"
+        type={showConfirm ? "text" : "password"}
+        placeholder="Ulangi password Anda"
+        autoComplete="new-password"
+        required
+        leftIcon={<Lock className="h-4 w-4" />}
+        rightElement={
           <button
             type="button"
             tabIndex={-1}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="text-slate-400 hover:text-slate-600 transition-colors"
             onClick={() => setShowConfirm((s) => !s)}
           >
             {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
-        </div>
-        {errors.confirm_password?.message && (
-          <p className="text-xs text-red-500">{errors.confirm_password.message}</p>
-        )}
+        }
+        error={errors.confirm_password?.message}
+        {...register("confirm_password")}
+      />
+
+      <div className="rounded-xl bg-slate-50 p-3.5 text-xs text-slate-500 leading-relaxed">
+        Dengan mendaftar, Anda menyetujui{" "}
+        <span className="font-medium text-primary-600">Syarat & Ketentuan</span> dan{" "}
+        <span className="font-medium text-primary-600">Kebijakan Privasi</span> kami.
       </div>
 
       <Button type="submit" size="lg" className="w-full" isLoading={isRegistering}>
-        Buat Akun
+        Buat Akun Gratis
       </Button>
 
       <p className="text-center text-sm text-slate-500">
         Sudah punya akun?{" "}
         <Link
           href="/login"
-          className="font-medium text-primary-600 hover:text-primary-700 hover:underline"
+          className="font-semibold text-primary-600 hover:text-primary-700 transition-colors"
         >
           Login di sini
         </Link>

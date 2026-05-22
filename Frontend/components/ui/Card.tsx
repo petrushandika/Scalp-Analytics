@@ -3,17 +3,27 @@ import { cn } from "@/lib/utils";
 interface CardProps {
   className?: string;
   children: React.ReactNode;
+  variant?: "default" | "bordered" | "elevated" | "glass" | "flat";
   hover?: boolean;
-  bordered?: boolean;
+  padding?: boolean;
 }
 
-export function Card({ className, children, hover, bordered }: CardProps) {
+const variantClasses = {
+  default: "bg-white shadow-card ring-1 ring-black/[0.04]",
+  bordered: "bg-white border border-slate-200",
+  elevated: "bg-white shadow-card-md",
+  glass: "glass border border-white/50 shadow-card",
+  flat: "bg-slate-50 border border-slate-100",
+};
+
+export function Card({ className, children, variant = "default", hover = false, padding = true }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-xl bg-white p-6",
-        bordered ? "border border-slate-200" : "shadow-sm shadow-slate-200/60 ring-1 ring-slate-100",
-        hover && "transition-shadow duration-200 hover:shadow-md hover:shadow-slate-200/80",
+        "rounded-2xl",
+        variantClasses[variant],
+        padding && "p-5",
+        hover && "card-hover cursor-pointer",
         className,
       )}
     >

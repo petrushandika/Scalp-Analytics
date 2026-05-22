@@ -15,7 +15,7 @@ class HabitLog:
     log_date: date
     created_at: datetime
     updated_at: datetime
-    stress_level: int | None = None   # 1-10
+    stress_level: int | None = None  # 1-10
     sleep_hours: float | None = None  # 0-24
     notes: str | None = None
 

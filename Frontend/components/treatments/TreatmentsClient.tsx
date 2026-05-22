@@ -1,18 +1,17 @@
 "use client";
 
 import {
-  Calendar,
   CheckCircle2,
+  ChevronDown,
   Pill,
-  PlusCircle,
   PowerOff,
-  Tag,
+  PlusCircle,
   Trash2,
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
 
-import { Button, Card, Input, Select, Textarea } from "@/components/ui";
+import { Button, Card, Input, Textarea } from "@/components/ui";
 import {
   useCreateTreatment,
   useDeactivateTreatment,
@@ -20,27 +19,101 @@ import {
   useTreatments,
 } from "@/hooks/treatment";
 import { formatDate, getErrorMessage } from "@/lib/utils";
-import type { TreatmentCategory } from "@/types/treatment";
+import type { CreateTreatmentRequest, TreatmentFrequency } from "@/types/treatment";
 
-const CATEGORIES: { value: TreatmentCategory; label: string }[] = [
-  { value: "topical", label: "Topikal" },
-  { value: "supplement", label: "Suplemen" },
-  { value: "lifestyle", label: "Gaya Hidup" },
-  { value: "medical", label: "Medis" },
+const PRESET_TREATMENTS: (CreateTreatmentRequest & { category: string; emoji: string })[] = [
+  {
+    emoji: "💧",
+    category: "Topikal",
+    name: "Minoxidil 2%",
+    frequency: "daily",
+    dosage: "1ml pagi & malam",
+    description: "Topikal untuk merangsang pertumbuhan rambut",
+  },
+  {
+    emoji: "💧",
+    category: "Topikal",
+    name: "Minoxidil 5%",
+    frequency: "daily",
+    dosage: "1ml pagi & malam",
+    description: "Konsentrasi lebih tinggi untuk hasil lebih cepat",
+  },
+  {
+    emoji: "🧴",
+    category: "Topikal",
+    name: "Ketoconazole Shampoo",
+    frequency: "weekly",
+    dosage: "2-3x seminggu",
+    description: "Sampo anti-jamur & anti-ketombe",
+  },
+  {
+    emoji: "💊",
+    category: "Medis",
+    name: "Finasteride 1mg",
+    frequency: "daily",
+    dosage: "1 tablet sehari",
+    description: "Penghambat DHT — konsultasi dokter terlebih dahulu",
+  },
+  {
+    emoji: "🌿",
+    category: "Suplemen",
+    name: "Biotin 2500mcg",
+    frequency: "daily",
+    dosage: "1 tablet pagi hari",
+    description: "Vitamin B7 untuk kuku & rambut",
+  },
+  {
+    emoji: "⚡",
+    category: "Suplemen",
+    name: "Zinc 10mg",
+    frequency: "daily",
+    dosage: "1 tablet sehari",
+    description: "Mineral penting untuk pertumbuhan rambut",
+  },
+  {
+    emoji: "☀️",
+    category: "Suplemen",
+    name: "Vitamin D3 1000IU",
+    frequency: "daily",
+    dosage: "1 kapsul sehari",
+    description: "Vitamin D untuk kesehatan folikel rambut",
+  },
+  {
+    emoji: "🌸",
+    category: "Topikal",
+    name: "Rosemary Oil",
+    frequency: "daily",
+    dosage: "5-10 tetes ke kulit kepala",
+    description: "Minyak esensial untuk sirkulasi darah",
+  },
+  {
+    emoji: "🔵",
+    category: "Gaya Hidup",
+    name: "Derma Roller 0.5mm",
+    frequency: "weekly",
+    dosage: "1x seminggu",
+    description: "Microneedling untuk stimulasi folikel rambut",
+  },
+  {
+    emoji: "🤲",
+    category: "Gaya Hidup",
+    name: "Pijat Kulit Kepala",
+    frequency: "daily",
+    dosage: "5-10 menit",
+    description: "Meningkatkan sirkulasi darah ke folikel rambut",
+  },
 ];
 
-const categoryColor: Record<TreatmentCategory, string> = {
-  topical: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
-  supplement: "bg-purple-50 text-purple-700 ring-1 ring-purple-200",
-  lifestyle: "bg-green-50 text-green-700 ring-1 ring-green-200",
-  medical: "bg-red-50 text-red-700 ring-1 ring-red-200",
+const FREQ_LABELS: Record<TreatmentFrequency, string> = {
+  daily: "Setiap hari",
+  weekly: "Mingguan",
+  custom: "Kustom",
 };
 
-const categoryAccent: Record<TreatmentCategory, string> = {
-  topical: "bg-blue-500",
-  supplement: "bg-purple-500",
-  lifestyle: "bg-green-500",
-  medical: "bg-red-500",
+const FREQ_BADGE: Record<TreatmentFrequency, string> = {
+  daily: "bg-primary-50 text-primary-700",
+  weekly: "bg-amber-50 text-amber-700",
+  custom: "bg-slate-100 text-slate-600",
 };
 
 export function TreatmentsClient() {
@@ -50,41 +123,40 @@ export function TreatmentsClient() {
   const deactivateMutation = useDeactivateTreatment();
   const deleteMutation = useDeleteTreatment();
 
-  const [form, setForm] = useState({
+  const [showCustomForm, setShowCustomForm] = useState(false);
+  const [form, setForm] = useState<CreateTreatmentRequest>({
     name: "",
-    category: "topical" as TreatmentCategory,
-    frequency: "",
-    start_date: new Date().toISOString().slice(0, 10),
-    end_date: "",
-    notes: "",
+    frequency: "daily",
+    dosage: "",
+    description: "",
   });
   const [error, setError] = useState("");
 
-  function set(field: string, value: string) {
+  function set(field: keyof CreateTreatmentRequest, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSelectPreset(preset: CreateTreatmentRequest) {
+    setError("");
+    try {
+      await createMutation.mutateAsync(preset);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  }
+
+  async function handleCustomSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     try {
       await createMutation.mutateAsync({
         name: form.name,
-        category: form.category,
         frequency: form.frequency,
-        start_date: form.start_date,
-        is_active: true,
-        ...(form.end_date ? { end_date: form.end_date } : {}),
-        ...(form.notes ? { notes: form.notes } : {}),
+        ...(form.dosage ? { dosage: form.dosage } : {}),
+        ...(form.description ? { description: form.description } : {}),
       });
-      setForm({
-        name: "",
-        category: "topical",
-        frequency: "",
-        start_date: new Date().toISOString().slice(0, 10),
-        end_date: "",
-        notes: "",
-      });
+      setForm({ name: "", frequency: "daily", dosage: "", description: "" });
+      setShowCustomForm(false);
     } catch (err) {
       setError(getErrorMessage(err));
     }
@@ -92,92 +164,121 @@ export function TreatmentsClient() {
 
   return (
     <div className="space-y-8">
-      {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Treatment</h1>
-        <p className="mt-1 text-sm text-slate-500">Kelola treatment perawatan rambut Anda</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Pilih treatment dari daftar atau tambahkan sendiri
+        </p>
       </div>
 
-      {/* Add Treatment form */}
-      <Card>
-        <div className="mb-5 flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-50">
-            <PlusCircle className="h-5 w-5 text-primary-600" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-slate-900">Tambah Treatment</h2>
-            <p className="text-xs text-slate-500">Catat treatment baru Anda</p>
-          </div>
+      {/* Preset treatments grid */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4">
+          <h2 className="font-semibold text-white">Treatment Populer</h2>
+          <p className="mt-0.5 text-sm text-primary-100">
+            Ketuk untuk langsung menambahkan ke daftar Anda
+          </p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Two-column grid for name + category */}
-          <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3">
+          {PRESET_TREATMENTS.map((preset) => (
+            <button
+              key={preset.name}
+              type="button"
+              onClick={() => handleSelectPreset(preset)}
+              disabled={createMutation.isPending}
+              className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left transition-all hover:border-primary-300 hover:bg-primary-50 disabled:opacity-60"
+            >
+              <span className="mt-0.5 shrink-0 text-xl">{preset.emoji}</span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold leading-snug text-slate-900">{preset.name}</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">
+                  {FREQ_LABELS[preset.frequency]}
+                  {preset.dosage ? ` · ${preset.dosage}` : ""}
+                </p>
+                <span className="mt-1 inline-block rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                  {preset.category}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+        {error && <p className="px-4 pb-3 text-sm text-red-500">{error}</p>}
+      </div>
+
+      {/* Custom form */}
+      <Card>
+        <button
+          type="button"
+          onClick={() => setShowCustomForm(!showCustomForm)}
+          className="flex w-full items-center gap-2.5"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100">
+            <PlusCircle className="h-5 w-5 text-slate-500" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="font-semibold text-slate-900">Treatment Kustom</p>
+            <p className="text-xs text-slate-500">Tambahkan yang tidak ada di daftar</p>
+          </div>
+          <ChevronDown
+            className={`h-4 w-4 text-slate-400 transition-transform ${showCustomForm ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {showCustomForm && (
+          <form
+            onSubmit={handleCustomSubmit}
+            className="mt-5 space-y-4 border-t border-slate-100 pt-5"
+          >
             <Input
               label="Nama Treatment"
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
-              placeholder="Minoxidil 5%, Biotin, dll."
+              placeholder="Nama treatment..."
               required
-              leftIcon={<Tag className="h-4 w-4" />}
             />
-            <Select
-              label="Kategori"
-              value={form.category}
-              onChange={(e) => set("category", e.target.value)}
-              required
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <Input
-            label="Frekuensi"
-            value={form.frequency}
-            onChange={(e) => set("frequency", e.target.value)}
-            placeholder="2x sehari, setiap pagi, dll."
-            required
-          />
-
-          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">Frekuensi</label>
+              <div className="flex gap-2">
+                {(["daily", "weekly", "custom"] as TreatmentFrequency[]).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => set("frequency", f)}
+                    className={`flex-1 rounded-xl py-2.5 text-sm font-medium transition-all ${
+                      form.frequency === f
+                        ? "bg-primary-50 text-primary-700 ring-2 ring-primary-500"
+                        : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {FREQ_LABELS[f]}
+                  </button>
+                ))}
+              </div>
+            </div>
             <Input
-              label="Tanggal Mulai"
-              type="date"
-              value={form.start_date}
-              onChange={(e) => set("start_date", e.target.value)}
-              required
+              label="Dosis / Cara Pakai"
+              value={form.dosage ?? ""}
+              onChange={(e) => set("dosage", e.target.value)}
+              placeholder="Contoh: 1 tablet pagi hari"
             />
-            <Input
-              label="Tanggal Selesai"
-              type="date"
-              value={form.end_date}
-              onChange={(e) => set("end_date", e.target.value)}
-              hint="Opsional"
+            <Textarea
+              label="Deskripsi"
+              rows={2}
+              value={form.description ?? ""}
+              onChange={(e) => set("description", e.target.value)}
+              placeholder="Catatan tambahan..."
             />
-          </div>
-
-          <Textarea
-            label="Catatan"
-            rows={2}
-            value={form.notes}
-            onChange={(e) => set("notes", e.target.value)}
-          />
-
-          {error && <p className="text-sm text-red-500">{error}</p>}
-
-          <Button type="submit" isLoading={createMutation.isPending} className="w-full">
-            Tambah Treatment
-          </Button>
-        </form>
+            <Button type="submit" isLoading={createMutation.isPending} className="w-full">
+              Tambah Treatment
+            </Button>
+          </form>
+        )}
       </Card>
 
-      {/* Treatment list */}
+      {/* List */}
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold text-slate-900">Daftar Treatment</h2>
+          <h2 className="font-semibold text-slate-900">Daftar Treatment Saya</h2>
           <div className="flex gap-2">
             <button
               onClick={() => setActiveOnly(true)}
@@ -217,9 +318,7 @@ export function TreatmentsClient() {
               <p className="font-medium text-slate-600">
                 Tidak ada treatment {activeOnly ? "aktif" : ""}
               </p>
-              <p className="mt-1 text-sm text-slate-400">
-                Tambahkan treatment di atas untuk mulai melacak
-              </p>
+              <p className="mt-1 text-sm text-slate-400">Pilih dari daftar populer di atas</p>
             </div>
           </div>
         ) : (
@@ -227,64 +326,54 @@ export function TreatmentsClient() {
             {treatments.map((t) => (
               <div
                 key={t.id}
-                className="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+                className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm transition-shadow hover:shadow-md"
               >
-                {/* Left accent bar based on category */}
-                <div className={`w-1.5 shrink-0 ${categoryAccent[t.category]}`} />
-
-                <div className="flex flex-1 items-center gap-4 px-4 py-3.5">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                    <Pill className="h-5 w-5 text-slate-500" />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-slate-900">{t.name}</span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${categoryColor[t.category]}`}
-                      >
-                        {CATEGORIES.find((c) => c.value === t.category)?.label ?? t.category}
-                      </span>
-                      {t.is_active ? (
-                        <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                          <CheckCircle2 className="h-3 w-3" /> Aktif
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">
-                          <XCircle className="h-3 w-3" /> Nonaktif
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-0.5 text-sm text-slate-500">{t.frequency}</p>
-                    <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
-                      <Calendar className="h-3 w-3" />
-                      {formatDate(t.start_date)}
-                      {t.end_date ? ` — ${formatDate(t.end_date)}` : ""}
-                    </p>
-                    {t.notes && <p className="mt-1 text-xs text-slate-500">{t.notes}</p>}
-                  </div>
-
-                  {/* Action icon buttons */}
-                  <div className="flex shrink-0 items-center gap-1">
-                    {t.is_active && (
-                      <button
-                        onClick={() => deactivateMutation.mutate(t.id)}
-                        disabled={deactivateMutation.isPending}
-                        title="Nonaktifkan"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-amber-50 hover:text-amber-600 disabled:opacity-50"
-                      >
-                        <PowerOff className="h-4 w-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => deleteMutation.mutate(t.id)}
-                      disabled={deleteMutation.isPending}
-                      title="Hapus"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+                  <Pill className="h-5 w-5 text-slate-500" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-slate-900">{t.name}</span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${FREQ_BADGE[t.frequency]}`}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                      {FREQ_LABELS[t.frequency]}
+                    </span>
+                    {t.is_active ? (
+                      <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                        <CheckCircle2 className="h-3 w-3" /> Aktif
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">
+                        <XCircle className="h-3 w-3" /> Nonaktif
+                      </span>
+                    )}
                   </div>
+                  {t.dosage && <p className="mt-0.5 text-sm text-slate-500">{t.dosage}</p>}
+                  {t.description && (
+                    <p className="mt-0.5 text-xs text-slate-400">{t.description}</p>
+                  )}
+                  <p className="mt-0.5 text-xs text-slate-400">Mulai: {formatDate(t.created_at)}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  {t.is_active && (
+                    <button
+                      onClick={() => deactivateMutation.mutate(t.id)}
+                      disabled={deactivateMutation.isPending}
+                      title="Nonaktifkan"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-amber-50 hover:text-amber-600 disabled:opacity-50"
+                    >
+                      <PowerOff className="h-4 w-4" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => deleteMutation.mutate(t.id)}
+                    disabled={deleteMutation.isPending}
+                    title="Hapus"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             ))}

@@ -1,7 +1,8 @@
 "use client";
 
-import { CheckCircle2, Mail, User2, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Camera, CheckCircle2, Mail, User2, XCircle } from "lucide-react";
+import Image from "next/image";
+import { useRef, useEffect, useState } from "react";
 
 import { Avatar, Button, Card, Input, Select } from "@/components/ui";
 import { useAuth } from "@/hooks/auth";
@@ -21,11 +22,13 @@ function SectionDivider({ title }: { title: string }) {
 }
 
 export function ProfileClient() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, refreshUser } = useAuth();
   const [form, setForm] = useState<UpdateProfileRequest>({});
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -49,6 +52,23 @@ export function ProfileClient() {
       }
       return next;
     });
+  }
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      await usersApi.uploadAvatar(fd);
+      if (refreshUser) await refreshUser();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setAvatarUploading(false);
+      e.target.value = "";
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -94,7 +114,35 @@ export function ProfileClient() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* ── Left: avatar card ── */}
         <Card className="flex flex-col items-center gap-5 p-8 text-center">
-          <Avatar name={user?.full_name} size="xl" />
+          <div className="relative">
+            {user?.avatar_url ? (
+              <Image
+                src={`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/${user.avatar_url}`}
+                alt="Avatar"
+                width={80}
+                height={80}
+                className="h-20 w-20 rounded-full object-cover ring-4 ring-slate-100"
+                unoptimized
+              />
+            ) : (
+              <Avatar name={user?.full_name ?? null} size="xl" />
+            )}
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={avatarUploading}
+              className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-white shadow-md hover:bg-primary-700 disabled:opacity-50"
+            >
+              <Camera className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarUpload}
+          />
           <div>
             <p className="text-lg font-bold text-slate-900">{user?.full_name ?? "—"}</p>
             <p className="mt-0.5 flex items-center justify-center gap-1.5 text-sm text-slate-500">

@@ -1,3 +1,4 @@
+import { BarChart3, Pill, Scan, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -7,66 +8,116 @@ export const metadata: Metadata = {
   title: "Login — Scalp Analytics",
 };
 
+const features = [
+  {
+    icon: Scan,
+    title: "Analisis AI Real-time",
+    desc: "Deteksi kondisi kulit kepala secara akurat",
+    color: "text-primary-300",
+    bg: "bg-primary-500/15",
+  },
+  {
+    icon: BarChart3,
+    title: "Tracking Komprehensif",
+    desc: "Pantau habit, nutrisi & progres perawatan",
+    color: "text-primary-300",
+    bg: "bg-primary-500/15",
+  },
+  {
+    icon: Pill,
+    title: "Rekomendasi Personal",
+    desc: "Treatment yang disesuaikan kondisi Anda",
+    color: "text-primary-300",
+    bg: "bg-primary-500/15",
+  },
+];
+
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen">
-      {/* Brand panel */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-gradient-to-br from-primary-900 to-primary-700 p-12 text-white">
-        <div className="flex items-center gap-3">
-          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="36" height="36" rx="10" fill="rgba(255,255,255,0.15)" />
-            <path d="M18 6C11.373 6 6 11.373 6 18c0 3.314 1.343 6.314 3.515 8.485C9.515 26.485 18 30 18 30s8.485-3.515 8.485-3.515A11.956 11.956 0 0030 18c0-6.627-5.373-12-12-12z" fill="rgba(255,255,255,0.9)" />
-            <circle cx="18" cy="16" r="4" fill="#0f766e" />
-            <path d="M13 22c0-2.761 2.239-5 5-5s5 2.239 5 5" stroke="#0f766e" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span className="text-xl font-bold tracking-tight">Scalp Analytics</span>
+    <div className="flex h-screen overflow-hidden">
+      {/* Brand panel — sticky, full height */}
+      <div className="relative hidden lg:flex lg:w-[52%] shrink-0 flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-900 via-primary-950 to-primary-900 p-12 text-white">
+        {/* Background decorations */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-primary-500/10 blur-3xl" />
+          <div className="absolute -bottom-24 left-8 h-72 w-72 rounded-full bg-primary-400/10 blur-3xl" />
+          <div className="absolute right-1/4 top-1/2 h-48 w-48 rounded-full bg-primary-500/5 blur-2xl" />
         </div>
 
-        <div className="space-y-8">
+        {/* Logo */}
+        <div className="relative">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-500/20 ring-1 ring-primary-400/30">
+              <Scan className="h-5 w-5 text-primary-300" />
+            </div>
+            <div>
+              <span className="text-lg font-bold tracking-tight">Scalp Analytics</span>
+              <div className="flex items-center gap-1 mt-0.5">
+                <Sparkles className="h-3 w-3 text-primary-400" />
+                <span className="text-[10px] font-semibold text-primary-400 uppercase tracking-widest">Pro</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Center content */}
+        <div className="relative space-y-10">
           <div>
-            <h2 className="text-4xl font-bold leading-tight">
-              Pantau kesehatan<br />rambut Anda<br />dengan AI.
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary-500/15 px-3 py-1 text-xs font-semibold text-primary-300 ring-1 ring-primary-400/20 mb-5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Lebih dari 1.000 pengguna aktif
+            </div>
+            <h2 className="text-4xl font-bold leading-tight tracking-tight">
+              Pantau kesehatan<br />rambut Anda<br />
+              <span className="text-primary-300">dengan AI.</span>
             </h2>
-            <p className="mt-4 text-primary-200 text-lg leading-relaxed">
-              Analisis kondisi kulit kepala secara real-time dan dapatkan rekomendasi perawatan yang personal.
+            <p className="mt-4 text-base text-slate-400 leading-relaxed max-w-sm">
+              Analisis kondisi kulit kepala secara real-time dan dapatkan rekomendasi perawatan yang benar-benar personal.
             </p>
           </div>
 
-          <ul className="space-y-4">
-            {[
-              { icon: "📸", text: "Analisis foto berbasis kecerdasan buatan" },
-              { icon: "📊", text: "Lacak progres dengan data habit & nutrisi" },
-              { icon: "💊", text: "Kelola treatment dan rekomendasi personal" },
-            ].map((item) => (
-              <li key={item.text} className="flex items-center gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/15 text-base">
-                  {item.icon}
-                </span>
-                <span className="text-primary-100">{item.text}</span>
-              </li>
+          <div className="space-y-4">
+            {features.map((f) => (
+              <div key={f.title} className="flex items-start gap-4">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${f.bg} ring-1 ring-white/10 ${f.color}`}>
+                  <f.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white text-sm">{f.title}</p>
+                  <p className="text-slate-400 text-xs mt-0.5">{f.desc}</p>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
-        <p className="text-sm text-primary-300">Dipercaya oleh 1.000+ pengguna</p>
+        {/* Bottom — user avatars */}
+        <div className="relative flex items-center gap-3">
+          <div className="flex -space-x-2">
+            {["A", "B", "C", "D"].map((l) => (
+              <div key={l} className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-500/30 ring-2 ring-slate-900 text-[10px] font-bold text-primary-200">
+                {l}
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-400">Bergabung dengan ribuan pengguna yang telah merasakan manfaatnya</p>
+        </div>
       </div>
 
-      {/* Form panel */}
-      <div className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-12">
+      {/* Form panel — scrollable */}
+      <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-white px-6 py-12">
         {/* Mobile logo */}
-        <div className="mb-8 flex items-center gap-2 lg:hidden">
-          <svg width="28" height="28" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="36" height="36" rx="10" fill="#0d9488" />
-            <path d="M18 6C11.373 6 6 11.373 6 18c0 3.314 1.343 6.314 3.515 8.485C9.515 26.485 18 30 18 30s8.485-3.515 8.485-3.515A11.956 11.956 0 0030 18c0-6.627-5.373-12-12-12z" fill="rgba(255,255,255,0.9)" />
-            <circle cx="18" cy="16" r="4" fill="#0f766e" />
-          </svg>
+        <div className="mb-8 flex items-center gap-2.5 lg:hidden">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-600">
+            <Scan className="h-5 w-5 text-white" />
+          </div>
           <span className="text-lg font-bold text-slate-900">Scalp Analytics</span>
         </div>
 
         <div className="w-full max-w-sm">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-slate-900">Selamat datang kembali</h1>
-            <p className="mt-1.5 text-sm text-slate-500">Masuk ke akun Scalp Analytics Anda</p>
+            <p className="mt-2 text-sm text-slate-500">Masuk ke akun Scalp Analytics Anda untuk melanjutkan.</p>
           </div>
           <Suspense>
             <Login />

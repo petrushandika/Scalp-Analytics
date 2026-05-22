@@ -10,6 +10,6 @@ export type {
 export { ApiError } from "./api";
 export type { Photo, AnalyzeResult, SeverityStage, PhotoAngle } from "./photo";
 export type { Habit, CreateHabitRequest } from "./habit";
-export type { Treatment, CreateTreatmentRequest, TreatmentCategory } from "./treatment";
+export type { Treatment, CreateTreatmentRequest, TreatmentFrequency } from "./treatment";
 export type { Analytics, ProgressPoint } from "./analytics";
 export type { Food, Meal, MealItem, MealType, CreateMealRequest, WaterLog, WaterToday } from "./nutrition";

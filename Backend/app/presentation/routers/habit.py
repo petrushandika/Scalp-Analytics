@@ -37,6 +37,8 @@ async def create_habit(
         log_date=body.log_date,
         stress_level=body.stress_level,
         sleep_hours=body.sleep_hours,
+        activity=body.activity,
+        activity_duration_min=body.activity_duration_min,
         notes=body.notes,
     )
     habit = await repo.save(habit)
@@ -87,6 +89,10 @@ async def update_habit(
         habit.stress_level = body.stress_level
     if body.sleep_hours is not None:
         habit.sleep_hours = body.sleep_hours
+    if body.activity is not None:
+        habit.activity = body.activity
+    if body.activity_duration_min is not None:
+        habit.activity_duration_min = body.activity_duration_min
     if body.notes is not None:
         habit.notes = body.notes
     habit = await repo.save(habit)
@@ -115,6 +121,8 @@ def _to_response(habit: HabitModel) -> HabitResponse:
         log_date=habit.log_date,
         stress_level=habit.stress_level,
         sleep_hours=float(habit.sleep_hours) if habit.sleep_hours is not None else None,
+        activity=habit.activity,
+        activity_duration_min=habit.activity_duration_min,
         notes=habit.notes,
         created_at=habit.created_at,
         updated_at=habit.updated_at,
